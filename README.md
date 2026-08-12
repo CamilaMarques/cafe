@@ -1,6 +1,6 @@
 # ☕ Aroma & Origem
 
-API RESTful desenvolvida em Spring Boot para o gerenciamento de catálogos e recomendação de cafés especiais, integrando filtros avançados de perfil sensorial e suporte à arquitetura moderna.
+API RESTful desenvolvida com Spring Boot 4 e Java 21 para e-commerce de cafés especiais. Arquitetura orientada a eventos utilizando Apache Kafka para mensageria assíncrona de assinaturas, persistência com PostgreSQL/Hibernate e integração segura via Spring Data JPA.
 
 ---
 
