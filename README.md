@@ -4,7 +4,7 @@ API RESTful desenvolvida em Spring Boot para o gerenciamento de catálogos e rec
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+### 🚀 Tecnologias Utilizadas
 
 * **Java 21**
 * **Spring Boot** (Web, Data JPA)
@@ -15,7 +15,7 @@ API RESTful desenvolvida em Spring Boot para o gerenciamento de catálogos e rec
 
 ---
 
-## 🛠️ Arquitetura e Estrutura do Projeto
+### 🛠️ Arquitetura e Estrutura do Projeto
 
 O projeto segue os princípios de separação de responsabilidades em camadas:
 * **Controller:** Camada de exposição dos endpoints REST.
@@ -25,7 +25,7 @@ O projeto segue os princípios de separação de responsabilidades em camadas:
 
 ---
 
-## ⚙️ Como Executar o Projeto Localmente
+### ⚙️ Como Executar o Projeto Localmente
 
 ### Pré-requisitos
 * Java 21 instalado
