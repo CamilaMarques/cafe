@@ -1,5 +1,6 @@
 package com.aromaorigem.aromaorigem.service;
 
+import com.aromaorigem.aromaorigem.messaging.AssinaturaProducer;
 import com.aromaorigem.aromaorigem.model.Assinatura;
 import com.aromaorigem.aromaorigem.repository.AssinaturaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,9 @@ public class AssinaturaService {
     @Autowired
     private AssinaturaRepository assinaturaRepository;
 
+    @Autowired
+    private AssinaturaProducer assinaturaProducer;
+
     public List<Assinatura> listarTodas() {
         return assinaturaRepository.findAll();
     }
@@ -22,7 +26,10 @@ public class AssinaturaService {
     }
 
     public Assinatura salvarAssinatura(Assinatura assinatura) {
-        return assinaturaRepository.save(assinatura);
+        Assinatura novaAssinatura = assinaturaRepository.save(assinatura);
+        assinaturaProducer.enviarEventoAssinatura(novaAssinatura);
+
+        return novaAssinatura;
     }
 
     public void deletarAssinatura(Long id) {
