@@ -5,6 +5,7 @@ import com.aromaorigem.aromaorigem.dto.LoginRequest;
 import com.aromaorigem.aromaorigem.dto.MessageResponse;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
+import com.aromaorigem.aromaorigem.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,9 @@ public class AuthController {
     @Autowired
     PasswordEncoder encoder;
 
+    @Autowired
+    JwtUtils jwtUtils;
+
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
 
@@ -39,13 +43,13 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = "mock-jwt-token-exemplo"; // Substitua pela chamada real do seu JwtUtils
+        String jwt = jwtUtils.generateJwtToken(authentication);
 
         ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
-                .maxAge(24 * 60 * 60) // 1 dia
+                .maxAge(24 * 60 * 60)
                 .sameSite("Lax")
                 .build();
 
