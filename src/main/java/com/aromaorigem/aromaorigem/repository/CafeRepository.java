@@ -13,4 +13,6 @@ public interface CafeRepository extends JpaRepository<Cafe, Long> {
     List<Cafe> findByAltitudeGreaterThanEqual(Integer altitude);
 
     List<Cafe> findByProcessoIgnoreCase(String processo);
+
+    List<Cafe> findByEmDestaqueTrue();
 }
