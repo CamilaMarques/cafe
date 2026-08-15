@@ -3,6 +3,7 @@ package com.aromaorigem.aromaorigem.security;
 import com.aromaorigem.aromaorigem.security.jwt.AuthTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -46,12 +47,18 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) {
+    public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/usuarios/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/cafes/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/cafes/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/cafes/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/cafes/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/avaliacoes/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/avaliacoes/**").authenticated()
+                                .requestMatchers("/api/usuarios/**").authenticated()
                                 .anyRequest().authenticated()
                 );
 

@@ -1,6 +1,8 @@
 package com.aromaorigem.aromaorigem.controller;
 
 import com.aromaorigem.aromaorigem.model.Cafe;
+import com.aromaorigem.aromaorigem.repository.AvaliacaoRepository;
+import com.aromaorigem.aromaorigem.repository.CafeRepository;
 import com.aromaorigem.aromaorigem.service.CafeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,10 +18,22 @@ public class CafeController {
     @Autowired
     private CafeService cafeService;
 
+    @Autowired
+    private CafeRepository cafeRepository;
+
+    @Autowired
+    private AvaliacaoRepository avaliacaoRepository;
+
     @GetMapping
     public ResponseEntity<List<Cafe>> listarTodos() {
         List<Cafe> cafes = cafeService.listarTodos();
         return ResponseEntity.ok(cafes);
+    }
+
+    @GetMapping("/destaques")
+    public ResponseEntity<List<Cafe>> listarDestaques() {
+        List<Cafe> destaques = cafeRepository.findByEmDestaqueTrue();
+        return ResponseEntity.ok(destaques);
     }
 
     @GetMapping("/{id}")
