@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -29,6 +30,10 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private String senha;
 
+    private String role;
+
+    private LocalDateTime dataCriacao = LocalDateTime.now();
+
     @Override
     public String getUsername() {
         return email;
@@ -38,6 +43,13 @@ public class Usuario implements UserDetails {
     public String getPassword() {
         return senha;
     }
+
+    private String cep;
+    private String rua;
+    private String numero;
+    private String cidade;
+    private String estado;
+    private String complemento;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -6,10 +6,7 @@ import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -29,7 +26,9 @@ public class UsuarioController {
         UsuarioResponse response = new UsuarioResponse(
                 usuario.getId(),
                 usuario.getNome(),
-                usuario.getEmail()
+                usuario.getEmail(),
+                usuario.getRole(),
+                usuario.getDataCriacao()
         );
 
         return ResponseEntity.ok(response);

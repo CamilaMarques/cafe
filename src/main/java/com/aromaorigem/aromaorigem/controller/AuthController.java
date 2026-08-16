@@ -64,12 +64,18 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new MessageResponse("Erro: E-mail já está em uso!"));
         }
 
-        Usuario usuario = new Usuario(
-                null,
-                cadastroRequest.nome(),
-                cadastroRequest.email(),
-                encoder.encode(cadastroRequest.senha())
-        );
+        Usuario usuario = new Usuario();
+        usuario.setNome(cadastroRequest.nome());
+        usuario.setEmail(cadastroRequest.email());
+        usuario.setSenha(encoder.encode(cadastroRequest.senha()));
+        usuario.setRole("ROLE_USER");
+
+        usuario.setCep(cadastroRequest.cep());
+        usuario.setRua(cadastroRequest.rua());
+        usuario.setNumero(cadastroRequest.numero());
+        usuario.setCidade(cadastroRequest.cidade());
+        usuario.setEstado(cadastroRequest.estado());
+        usuario.setComplemento(cadastroRequest.complemento());
 
         usuarioRepository.save(usuario);
 
@@ -88,5 +94,22 @@ public class AuthController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok(new MessageResponse("Logout realizado com sucesso!"));
+    }
+
+    @PostMapping("/admin/cadastrar")
+    public ResponseEntity<?> cadastrarAdmin(@RequestBody CadastroRequest cadastroRequest) {
+        if (usuarioRepository.existsByEmail(cadastroRequest.email())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Erro: E-mail já está em uso!"));
+        }
+
+        Usuario admin = new Usuario();
+        admin.setNome(cadastroRequest.nome());
+        admin.setEmail(cadastroRequest.email());
+        admin.setSenha(encoder.encode(cadastroRequest.senha()));
+        admin.setRole("ROLE_ADMIN");
+
+        usuarioRepository.save(admin);
+
+        return ResponseEntity.ok(new MessageResponse("Administrador registrado com sucesso!"));
     }
 }
