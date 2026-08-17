@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,14 +40,14 @@ public class Cafe {
     @Column(nullable = false)
     private BigDecimal preco;
 
-    @ElementCollection
-    @CollectionTable(name = "cafe_notas", joinColumns = @JoinColumn(name = "cafe_id"))
-    @Column(name = "nota")
+    // Mapeado como array nativo no Postgres
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "notas_sensoriais", columnDefinition = "text[]")
     private List<String> notasSensoriais;
 
-    @ElementCollection
-    @CollectionTable(name = "cafe_imagens", joinColumns = @JoinColumn(name = "cafe_id"))
-    @Column(name = "url_imagem")
+    // Mapeado como array nativo no Postgres
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "imagens_url", columnDefinition = "text[]")
     private List<String> imagensUrl;
 
     private String videoDemonstracaoUrl;

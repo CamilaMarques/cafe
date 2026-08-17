@@ -2,7 +2,9 @@ package com.aromaorigem.aromaorigem.service;
 
 import com.aromaorigem.aromaorigem.messaging.AssinaturaProducer;
 import com.aromaorigem.aromaorigem.model.Assinatura;
+import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.AssinaturaRepository;
+import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,9 @@ public class AssinaturaService {
     private AssinaturaRepository assinaturaRepository;
 
     @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
     private AssinaturaProducer assinaturaProducer;
 
     public List<Assinatura> listarTodas() {
@@ -25,9 +30,31 @@ public class AssinaturaService {
         return assinaturaRepository.findById(id);
     }
 
-    public Assinatura salvarAssinatura(Assinatura assinatura) {
+    public Assinatura salvarAssinatura(Assinatura assinatura, Usuario usuarioLogado) {
+        if (usuarioLogado != null && assinatura.getPlano() != null) {
+            String nomeAssinatura = assinatura.getPlano();
+
+            String novoPlano = "Explorador";
+            if (nomeAssinatura.toLowerCase().contains("sommelier")) {
+                novoPlano = "Sommelier";
+            } else if (nomeAssinatura.toLowerCase().contains("aibiliver") || nomeAssinatura.toLowerCase().contains("conectado")) {
+                novoPlano = "Aibiliver (Conectado)";
+            }
+
+            if ("Sommelier".equals(novoPlano) && !novoPlano.equals(usuarioLogado.getPlanoAtivo())) {
+                usuarioLogado.setContadorFidelidade(0);
+            }
+
+            usuarioLogado.setPlanoAtivo(novoPlano);
+            usuarioLogado.setStatusAssinatura("ATIVA");
+            usuarioRepository.save(usuarioLogado);
+        }
+
         Assinatura novaAssinatura = assinaturaRepository.save(assinatura);
-        assinaturaProducer.enviarEventoAssinatura(novaAssinatura);
+
+        if (assinaturaProducer != null) {
+            assinaturaProducer.enviarEventoAssinatura(novaAssinatura);
+        }
 
         return novaAssinatura;
     }

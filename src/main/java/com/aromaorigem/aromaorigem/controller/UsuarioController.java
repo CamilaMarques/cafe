@@ -28,7 +28,19 @@ public class UsuarioController {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getRole(),
-                usuario.getDataCriacao()
+                usuario.getDataCriacao(),
+                usuario.getCep(),
+                usuario.getRua(),
+                usuario.getNumero(),
+                usuario.getCidade(),
+                usuario.getEstado(),
+                usuario.getComplemento(),
+                usuario.getMoagemPreferida(),
+                usuario.getNotasSensoriais(),
+                usuario.getIntensidade(),
+                usuario.getPlanoAtivo(),
+                usuario.getStatusAssinatura(),
+                usuario.getContadorFidelidade()
         );
 
         return ResponseEntity.ok(response);

@@ -34,6 +34,23 @@ public class Usuario implements UserDetails {
 
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
+    private String cep;
+    private String rua;
+    private String numero;
+    private String cidade;
+    private String estado;
+    private String complemento;
+
+    private String moagemPreferida;
+    private String notasSensoriais;
+    private String intensidade;
+
+    private String planoAtivo;
+    private String statusAssinatura;
+
+    @Column(name = "contador_fidelidade")
+    private Integer contadorFidelidade = 0;
+
     @Override
     public String getUsername() {
         return email;
@@ -44,12 +61,6 @@ public class Usuario implements UserDetails {
         return senha;
     }
 
-    private String cep;
-    private String rua;
-    private String numero;
-    private String cidade;
-    private String estado;
-    private String complemento;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
