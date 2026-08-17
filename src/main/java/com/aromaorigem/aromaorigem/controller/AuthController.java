@@ -61,7 +61,7 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody CadastroRequest cadastroRequest) {
         if (usuarioRepository.existsByEmail(cadastroRequest.email())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Erro: E-mail já está em uso!"));
+            return ResponseEntity.badRequest().body(new MessageResponse("Este e-mail já possui cadastro em nosso sistema!"));
         }
 
         Usuario usuario = new Usuario();
@@ -70,12 +70,31 @@ public class AuthController {
         usuario.setSenha(encoder.encode(cadastroRequest.senha()));
         usuario.setRole("ROLE_USER");
 
+        // Dados Pessoais Extras
+        usuario.setCpf(cadastroRequest.cpf());
+        usuario.setCelular(cadastroRequest.celular());
+        usuario.setDataNascimento(cadastroRequest.dataNascimento());
+
+        // Endereço Principal
         usuario.setCep(cadastroRequest.cep());
         usuario.setRua(cadastroRequest.rua());
         usuario.setNumero(cadastroRequest.numero());
         usuario.setCidade(cadastroRequest.cidade());
         usuario.setEstado(cadastroRequest.estado());
         usuario.setComplemento(cadastroRequest.complemento());
+
+        // Endereço Alternativo
+        usuario.setCepAlternativo(cadastroRequest.cepAlternativo());
+        usuario.setRuaAlternativa(cadastroRequest.ruaAlternativo());
+        usuario.setNumeroAlternativo(cadastroRequest.numeroAlternativo());
+        usuario.setCidadeAlternativa(cadastroRequest.cidadeAlternativo());
+        usuario.setEstadoAlternativo(cadastroRequest.estadoAlternativo());
+        usuario.setComplementoAlternativo(cadastroRequest.complementoAlternativo());
+
+        // Preferências
+        usuario.setMoagemPreferida(cadastroRequest.moagemPreferida());
+        usuario.setNotasSensoriais(cadastroRequest.notasSensoriais());
+        usuario.setIntensidade(cadastroRequest.intensidade());
 
         usuarioRepository.save(usuario);
 
@@ -99,7 +118,7 @@ public class AuthController {
     @PostMapping("/admin/cadastrar")
     public ResponseEntity<?> cadastrarAdmin(@RequestBody CadastroRequest cadastroRequest) {
         if (usuarioRepository.existsByEmail(cadastroRequest.email())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Erro: E-mail já está em uso!"));
+            return ResponseEntity.badRequest().body(new MessageResponse("Este e-mail já possui cadastro em nosso sistema!"));
         }
 
         Usuario admin = new Usuario();

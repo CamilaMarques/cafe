@@ -1,10 +1,12 @@
 package com.aromaorigem.aromaorigem.controller;
 
 import com.aromaorigem.aromaorigem.model.Assinatura;
+import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.service.AssinaturaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +32,11 @@ public class AssinaturaController {
     }
 
     @PostMapping
-    public ResponseEntity<Assinatura> criarAssinatura(@RequestBody Assinatura assinatura) {
-        Assinatura novaAssinatura = assinaturaService.salvarAssinatura(assinatura);
+    public ResponseEntity<Assinatura> criarAssinatura(
+            @RequestBody Assinatura assinatura,
+            @AuthenticationPrincipal Usuario usuarioLogado) {
+
+        Assinatura novaAssinatura = assinaturaService.salvarAssinatura(assinatura, usuarioLogado);
         return ResponseEntity.status(HttpStatus.CREATED).body(novaAssinatura);
     }
 
