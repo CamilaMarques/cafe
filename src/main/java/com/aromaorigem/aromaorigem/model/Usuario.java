@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 
 @Entity
@@ -66,6 +67,12 @@ public class Usuario implements UserDetails {
 
     @Column(name = "contador_fidelidade")
     private Integer contadorFidelidade = 0;
+
+    @Column(name = "ciente_mudanca_plano")
+    private boolean cienteMudancaPlano = false;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<ProdutoRecorrente> produtosRecorrentes;
 
     @Override
     public String getUsername() {
