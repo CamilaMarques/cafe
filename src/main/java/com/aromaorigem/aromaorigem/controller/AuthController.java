@@ -37,13 +37,11 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.senha())
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         String jwt = jwtUtils.generateJwtToken(authentication);
 
         ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
@@ -61,6 +59,10 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody CadastroRequest cadastroRequest) {
+        if (!isCpfValido(cadastroRequest.cpf())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("CPF inválido."));
+        }
+
         if (usuarioRepository.existsByEmail(cadastroRequest.email())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Este e-mail já possui cadastro em nosso sistema!"));
         }
@@ -123,18 +125,61 @@ public class AuthController {
 
     @PostMapping("/admin/cadastrar")
     public ResponseEntity<?> cadastrarAdmin(@RequestBody CadastroRequest cadastroRequest) {
+        if (cadastroRequest.cpf() != null && !isCpfValido(cadastroRequest.cpf())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("CPF inválido."));
+        }
+
         if (usuarioRepository.existsByEmail(cadastroRequest.email())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Este e-mail já possui cadastro em nosso sistema!"));
         }
 
+        if (cadastroRequest.cpf() != null && usuarioRepository.existsByCpf(cadastroRequest.cpf())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Este CPF já possui cadastro em nosso sistema!"));
+        }
+
         Usuario admin = new Usuario();
         admin.setNome(cadastroRequest.nome());
+        admin.setSobrenome(cadastroRequest.sobrenome());
         admin.setEmail(cadastroRequest.email());
+        admin.setCpf(cadastroRequest.cpf());
         admin.setSenha(encoder.encode(cadastroRequest.senha()));
         admin.setRole("ROLE_ADMIN");
 
         usuarioRepository.save(admin);
 
         return ResponseEntity.ok(new MessageResponse("Administrador registrado com sucesso!"));
+    }
+
+    private boolean isCpfValido(String cpf) {
+        if (cpf == null) return false;
+        cpf = cpf.replaceAll("\\D", "");
+
+        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
+            return false;
+        }
+
+        try {
+            int soma = 0;
+            for (int i = 0; i < 9; i++) {
+                soma += (cpf.charAt(i) - '0') * (10 - i);
+            }
+            int digito1 = 11 - (soma % 11);
+            if (digito1 > 9) digito1 = 0;
+
+            if (digito1 != (cpf.charAt(9) - '0')) {
+                return false;
+            }
+
+            soma = 0;
+            for (int i = 0; i < 10; i++) {
+                soma += (cpf.charAt(i) - '0') * (11 - i);
+            }
+            int digito2 = 11 - (soma % 11);
+            if (digito2 > 9) digito2 = 0;
+
+            return digito2 == (cpf.charAt(10) - '0');
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
