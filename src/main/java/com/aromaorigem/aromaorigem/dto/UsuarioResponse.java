@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -40,4 +41,6 @@ public class UsuarioResponse {
     private String planoAtivo;
     private String statusAssinatura;
     private Integer contadorFidelidade;
+
+    private List<ProdutoRecorrenteDTO> produtosRecorrentes;
 }

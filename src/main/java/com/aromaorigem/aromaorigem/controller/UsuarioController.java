@@ -77,4 +77,22 @@ public class UsuarioController {
 
         return ResponseEntity.ok(new MessageResponse("Perfil atualizado com sucesso!"));
     }
+
+    @PostMapping("/perfil/ciente-mudanca")
+    public ResponseEntity<?> registrarCienteMudanca() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Usuário não autenticado"));
+        }
+
+        String email = auth.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        usuario.setCienteMudancaPlano(true);
+        usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok(new MessageResponse("Confirmação de ciente registrada com sucesso!"));
+    }
 }

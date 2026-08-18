@@ -15,6 +15,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.aromaorigem.aromaorigem.security.services.UserDetailsServiceImpl;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -49,24 +54,54 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/cafes/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/cafes/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/cafes/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/cafes/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/avaliacoes/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/avaliacoes/**").authenticated()
-                                .requestMatchers("/api/usuarios/**").authenticated()
-                                .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/usuarios/**").authenticated()
-                                .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> auth
+                        // 1. PRE-FLIGHT CORS E AUTENTICAÇÃO LIVRE
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+
+                        // 2. ENDPOINTS PÚBLICOS DE CAFÉS E AVALIAÇÕES
+                        .requestMatchers(HttpMethod.GET, "/api/cafes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/avaliacoes/**").permitAll()
+
+                        // 3. ENDPOINTS QUE EXIGEM LOGIN
+                        .requestMatchers("/api/usuarios/**").authenticated()
+                        .requestMatchers("/api/produtos-recorrentes/**").authenticated()
+
+                        // 4. QUALQUER OUTRO PRECISA DE AUTENTICAÇÃO
+                        .anyRequest().authenticated()
                 );
 
         http.authenticationProvider(authenticationProvider);
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://0.0.0.0:*"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Cookie"
+        ));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
