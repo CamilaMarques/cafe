@@ -7,6 +7,7 @@ import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import com.aromaorigem.aromaorigem.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -59,9 +60,13 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody CadastroRequest cadastroRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody CadastroRequest cadastroRequest) {
         if (usuarioRepository.existsByEmail(cadastroRequest.email())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Este e-mail já possui cadastro em nosso sistema!"));
+        }
+
+        if (usuarioRepository.existsByCpf(cadastroRequest.cpf())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Este CPF já possui cadastro em nosso sistema!"));
         }
 
         Usuario usuario = new Usuario();

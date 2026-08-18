@@ -2,11 +2,12 @@ package com.aromaorigem.aromaorigem.controller;
 
 import com.aromaorigem.aromaorigem.dto.CadastroRequest;
 import com.aromaorigem.aromaorigem.dto.MessageResponse;
-import com.aromaorigem.aromaorigem.dto.UsuarioResponse;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,54 +21,36 @@ public class UsuarioController {
 
     @GetMapping("/perfil")
     public ResponseEntity<?> obterPerfil() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Usuário não autenticado"));
+        }
+
+        String email = auth.getName();
 
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        UsuarioResponse response = new UsuarioResponse(
-                usuario.getId(),
-                usuario.getNome(),
-                usuario.getEmail(),
-                usuario.getRole(),
-                usuario.getDataCriacao(),
-                // Pessoais Extras
-                usuario.getCpf(),
-                usuario.getCelular(),
-                usuario.getDataNascimento(),
-                // Endereço Principal
-                usuario.getCep(),
-                usuario.getRua(),
-                usuario.getNumero(),
-                usuario.getCidade(),
-                usuario.getEstado(),
-                usuario.getComplemento(),
-                // Endereço Alternativo
-                usuario.getCepAlternativo(),
-                usuario.getRuaAlternativa(),
-                usuario.getNumeroAlternativo(),
-                usuario.getCidadeAlternativa(),
-                usuario.getEstadoAlternativo(),
-                usuario.getComplementoAlternativo(),
-                // Preferências
-                usuario.getMoagemPreferida(),
-                usuario.getNotasSensoriais(),
-                usuario.getIntensidade(),
-                usuario.getPlanoAtivo(),
-                usuario.getStatusAssinatura(),
-                usuario.getContadorFidelidade()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(usuario);
     }
 
     @PutMapping("/perfil/editar")
     public ResponseEntity<?> atualizarPerfil(@RequestBody CadastroRequest request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Usuário não autenticado"));
+        }
+
+        String email = auth.getName();
+
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         usuario.setNome(request.nome());
+        usuario.setSobrenome(request.sobrenome());
+        usuario.setNomeSocial(request.nomeSocial());
         usuario.setCpf(request.cpf());
         usuario.setCelular(request.celular());
         usuario.setDataNascimento(request.dataNascimento());
