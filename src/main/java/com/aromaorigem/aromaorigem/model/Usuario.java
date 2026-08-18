@@ -21,8 +21,11 @@ public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nome;
+    private String sobrenome;
+
+    @Column(name = "nome_social")
+    private String nomeSocial; // Não obrigatório, respeita a identidade da pessoa
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -32,7 +35,9 @@ public class Usuario implements UserDetails {
 
     private String role;
 
+    @Column(unique = true)
     private String cpf;
+
     private String celular;
     private String dataNascimento;
 
