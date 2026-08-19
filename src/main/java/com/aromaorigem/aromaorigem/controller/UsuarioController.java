@@ -51,7 +51,6 @@ public class UsuarioController {
         usuario.setNome(request.nome());
         usuario.setSobrenome(request.sobrenome());
         usuario.setNomeSocial(request.nomeSocial());
-        usuario.setCpf(request.cpf());
         usuario.setCelular(request.celular());
         usuario.setDataNascimento(request.dataNascimento());
 
