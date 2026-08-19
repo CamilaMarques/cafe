@@ -1,4 +1,6 @@
 package com.aromaorigem.aromaorigem.model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,9 +33,11 @@ public class Usuario implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String senha;
 
+    @JsonIgnore
     private String role;
 
     @Column(unique = true)
@@ -72,26 +76,36 @@ public class Usuario implements UserDetails {
     private boolean cienteMudancaPlano = false;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<ProdutoRecorrente> produtosRecorrentes;
 
     @Override
+    @JsonIgnore
     public String getUsername() {
         return email;
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() {
         return senha;
     }
 
-
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();
     }
 
+    @JsonIgnore
     @Override public boolean isAccountNonExpired() { return true; }
+
+    @JsonIgnore
     @Override public boolean isAccountNonLocked() { return true; }
+
+    @JsonIgnore
     @Override public boolean isCredentialsNonExpired() { return true; }
+
+    @JsonIgnore
     @Override public boolean isEnabled() { return true; }
 }

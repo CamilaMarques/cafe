@@ -1,8 +1,11 @@
 package com.aromaorigem.aromaorigem.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,12 +25,20 @@ public class ProdutoRecorrente {
     private String permanenciaMinima;
     private Integer diaEntrega;
     private String imagemUrl;
-    private String frequencia; // "MENSAL" ou "QUINZENAL"
+    private String frequencia;
     private String status;     // "ATIVO" ou "PAUSADO"
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "cafe_id")
+    private Cafe cafe;
+
+    @ManyToOne
     @JoinColumn(name = "usuario_id")
+    @JsonIgnore
     private Usuario usuario;
 
     private LocalDateTime dataCriacao = LocalDateTime.now();
+
+    private LocalDate dataProximaEntrega;
+    private Integer contadorFidelidade = 0;
 }
