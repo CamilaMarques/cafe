@@ -1,9 +1,11 @@
 package com.aromaorigem.aromaorigem.controller;
 
+import com.aromaorigem.aromaorigem.dto.ProdutoRecorrenteDTO;
 import com.aromaorigem.aromaorigem.model.ProdutoRecorrente;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.ProdutoRecorrenteRepository;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
+import com.aromaorigem.aromaorigem.service.ProdutoRecorrenteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,28 +23,20 @@ public class ProdutoRecorrenteController {
     private ProdutoRecorrenteRepository produtoRecorrenteRepository;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private ProdutoRecorrenteService produtoRecorrenteService;
 
     @GetMapping
     public ResponseEntity<?> listarProdutosDoUsuarioLogado(@AuthenticationPrincipal Usuario usuarioLogado) {
-        if (usuarioLogado == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não autenticado");
-        }
-
+        if (usuarioLogado == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Não autenticado");
         List<ProdutoRecorrente> produtos = produtoRecorrenteRepository.findByUsuarioId(usuarioLogado.getId());
         return ResponseEntity.ok(produtos);
     }
 
     @PostMapping
-    public ResponseEntity<?> criarAssinaturaProduto(@RequestBody ProdutoRecorrente novoProduto, @AuthenticationPrincipal Usuario usuarioLogado) {
-        if (usuarioLogado == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não autenticado");
-        }
+    public ResponseEntity<?> criarAssinaturaProduto(@RequestBody ProdutoRecorrenteDTO novoDto, @AuthenticationPrincipal Usuario usuarioLogado) {
+        if (usuarioLogado == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Não autenticado");
 
-        novoProduto.setUsuario(usuarioLogado);
-        novoProduto.setStatus("ATIVO");
-
-        ProdutoRecorrente salvo = produtoRecorrenteRepository.save(novoProduto);
+        ProdutoRecorrenteDTO salvo = produtoRecorrenteService.criarAssinatura(novoDto, usuarioLogado);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
@@ -50,7 +44,7 @@ public class ProdutoRecorrenteController {
     public ResponseEntity<?> cancelarAssinaturaProduto(@PathVariable Long id) {
         if (produtoRecorrenteRepository.existsById(id)) {
             produtoRecorrenteRepository.deleteById(id);
-            return ResponseEntity.ok("Assinatura de produto cancelada com sucesso!");
+            return ResponseEntity.ok("Assinatura cancelada com sucesso!");
         }
         return ResponseEntity.notFound().build();
     }
