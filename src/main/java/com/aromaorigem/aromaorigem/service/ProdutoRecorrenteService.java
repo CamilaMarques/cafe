@@ -56,4 +56,24 @@ public class ProdutoRecorrenteService {
                 cafe.getRegiao()
         );
     }
+
+    public ProdutoRecorrenteDTO atualizarQuantidade(Long id, Integer novaQuantidade) {
+        ProdutoRecorrente produto = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto recorrente não encontrado"));
+
+        produto.setQuantidade(novaQuantidade);
+        ProdutoRecorrente salvo = repository.save(produto);
+
+        Cafe cafe = salvo.getCafe();
+        return new ProdutoRecorrenteDTO(
+                salvo.getId(), salvo.getNome(), salvo.getPreco(), salvo.getQuantidade(),
+                salvo.getTipo(), salvo.getPermanenciaMinima(), salvo.getDiaEntrega(),
+                salvo.getImagemUrl(), salvo.getFrequencia(), salvo.getStatus(),
+                salvo.getDataCriacao() != null ? salvo.getDataCriacao().toLocalDate() : null,
+                salvo.getDataProximaEntrega(),
+                salvo.getContadorFidelidade(), cafe != null ? cafe.getId() : null,
+                cafe != null ? cafe.getFazendaProdutora() : null,
+                cafe != null ? cafe.getRegiao() : null
+        );
+    }
 }

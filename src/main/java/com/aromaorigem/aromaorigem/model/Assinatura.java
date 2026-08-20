@@ -16,6 +16,8 @@ public class Assinatura {
 
     private String plano;
 
+    private Integer quantidade = 1;
+
     @Enumerated(EnumType.STRING)
     private StatusAssinatura status;
 }

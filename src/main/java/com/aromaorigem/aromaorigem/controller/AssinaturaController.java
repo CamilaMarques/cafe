@@ -46,4 +46,14 @@ public class AssinaturaController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/quantidade")
+    public ResponseEntity<Assinatura> atualizarQuantidade(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Integer> payload) {
+
+        Integer novaQuantidade = payload.get("quantidade");
+        Assinatura assinaturaAtualizada = assinaturaService.atualizarQuantidade(id, novaQuantidade);
+        return ResponseEntity.ok(assinaturaAtualizada);
+    }
+
 }

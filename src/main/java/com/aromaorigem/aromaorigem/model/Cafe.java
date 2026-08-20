@@ -40,6 +40,8 @@ public class Cafe {
     @Column(nullable = false)
     private BigDecimal preco;
 
+    private String peso;
+
     // Mapeado como array nativo no Postgres
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "notas_sensoriais", columnDefinition = "text[]")

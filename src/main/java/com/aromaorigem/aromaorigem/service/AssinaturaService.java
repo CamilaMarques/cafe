@@ -62,4 +62,12 @@ public class AssinaturaService {
     public void deletarAssinatura(Long id) {
         assinaturaRepository.deleteById(id);
     }
+
+    public Assinatura atualizarQuantidade(Long id, Integer novaQuantidade) {
+        Assinatura assinatura = assinaturaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assinatura não encontrada"));
+
+        assinatura.setQuantidade(novaQuantidade);
+        return assinaturaRepository.save(assinatura);
+    }
 }

@@ -48,4 +48,17 @@ public class ProdutoRecorrenteController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @PatchMapping("/{id}/quantidade")
+    public ResponseEntity<?> atualizarQuantidade(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Integer> payload,
+            @AuthenticationPrincipal Usuario usuarioLogado) {
+
+        if (usuarioLogado == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Não autenticado");
+
+        Integer novaQuantidade = payload.get("quantidade");
+        ProdutoRecorrenteDTO atualizado = produtoRecorrenteService.atualizarQuantidade(id, novaQuantidade);
+        return ResponseEntity.ok(atualizado);
+    }
 }
