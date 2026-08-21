@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -60,5 +61,24 @@ public class FavoritoController {
 
         boolean existe = favoritoRepository.existsByUsuarioIdAndCafeId(usuario.getId(), cafeId);
         return ResponseEntity.ok(existe);
+    }
+
+    @GetMapping("/ids")
+    public ResponseEntity<List<Long>> listarIdsFavoritos(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        String email = principal.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+        if (usuario == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Long> ids = favoritoRepository.findByUsuarioId(usuario.getId())
+                .stream()
+                .map(Favorito::getCafeId)
+                .toList();
+
+        return ResponseEntity.ok(ids);
     }
 }

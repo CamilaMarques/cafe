@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface FavoritoRepository extends JpaRepository<Favorito, Long> {
@@ -14,4 +15,6 @@ public interface FavoritoRepository extends JpaRepository<Favorito, Long> {
     @Transactional
     @Modifying
     void deleteByUsuarioIdAndCafeId(Long usuarioId, Long cafeId);
+
+    List<Favorito> findByUsuarioId(Long usuarioId);
 }
