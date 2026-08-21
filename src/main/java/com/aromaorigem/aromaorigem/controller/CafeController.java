@@ -32,7 +32,7 @@ public class CafeController {
 
     @GetMapping("/destaques")
     public ResponseEntity<List<Cafe>> listarDestaques() {
-        List<Cafe> destaques = cafeRepository.findByEmDestaqueTrue();
+        List<Cafe> destaques = cafeRepository.findByEmDestaqueTrueWithVariantes();
         return ResponseEntity.ok(destaques);
     }
 

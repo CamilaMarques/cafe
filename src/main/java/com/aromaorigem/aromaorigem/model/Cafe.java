@@ -1,5 +1,6 @@
 package com.aromaorigem.aromaorigem.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
@@ -37,12 +37,9 @@ public class Cafe {
 
     private Integer intensidade;
 
-    @Column(nullable = false)
-    private BigDecimal preco;
+    @Column(name = "descricao_curta", length = 500)
+    private String descricaoCurta;
 
-    private String peso;
-
-    // Mapeado como array nativo no Postgres
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "notas_sensoriais", columnDefinition = "text[]")
     private List<String> notasSensoriais;
@@ -59,6 +56,11 @@ public class Cafe {
     private Double mediaNotas = 0.0;
     private Integer totalAvaliacoes = 0;
 
+    @JsonManagedReference
+    @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VarianteCafe> variantes;
+
+    @JsonManagedReference
     @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Avaliacao> avaliacoes;
 }

@@ -14,11 +14,11 @@ public class CafeService {
     private CafeRepository cafeRepository;
 
     public List<Cafe> listarTodos() {
-        return cafeRepository.findAll();
+        return cafeRepository.findAllWithVariantes();
     }
 
     public Optional<Cafe> buscarPorId(Long id) {
-        return cafeRepository.findById(id);
+        return cafeRepository.findByIdWithVariantes(id);
     }
 
     public Cafe salvarCafe(Cafe cafe) {
@@ -30,10 +30,10 @@ public class CafeService {
     }
 
     public List<Cafe> filtrarPorRegiao(String regiao) {
-        return cafeRepository.findByRegiaoIgnoreCase(regiao);
+        return cafeRepository.findByRegiaoIgnoreCaseWithVariantes(regiao);
     }
 
     public List<Cafe> filtrarPorAltitudeMinima(Integer altitude) {
-        return cafeRepository.findByAltitudeGreaterThanEqual(altitude);
+        return cafeRepository.findByAltitudeGreaterThanEqualWithVariantes(altitude);
     }
 }
