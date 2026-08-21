@@ -41,4 +41,8 @@ public class ProdutoRecorrente {
 
     private LocalDate dataProximaEntrega;
     private Integer contadorFidelidade = 0;
+
+    @ManyToOne
+    @JoinColumn(name = "variante_id")
+    private VarianteCafe variante;
 }

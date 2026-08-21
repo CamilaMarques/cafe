@@ -6,31 +6,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
-@Table(name = "avaliacoes")
+@Table(name = "variantes_cafe")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Avaliacao {
-
+public class VarianteCafe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private Integer nota;
-    @Column(length = 500)
-    private String comentario;
-
-    private LocalDateTime dataCriacao = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cafe_id", nullable = false)
     @JsonBackReference
     private Cafe cafe;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
+    @Column(nullable = false)
+    private String peso;
+
+    @Column(nullable = false)
+    private BigDecimal preco;
+
+    @Column(nullable = false)
+    private Integer estoque = 0;
 }

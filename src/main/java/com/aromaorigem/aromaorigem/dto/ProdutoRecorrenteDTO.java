@@ -17,6 +17,8 @@ public record ProdutoRecorrenteDTO(
         LocalDate dataProximaEntrega,
         Integer contadorFidelidade,
         Long cafeId,
+        Long varianteId,
         String fazendaProdutora,
-        String regiao
+        String regiao,
+        String imagemUrlDTO
 ) {}
