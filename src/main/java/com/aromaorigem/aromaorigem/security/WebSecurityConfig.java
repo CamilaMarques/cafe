@@ -69,6 +69,7 @@ public class WebSecurityConfig {
                         // 3. ENDPOINTS QUE EXIGEM LOGIN
                         .requestMatchers("/api/usuarios/**").authenticated()
                         .requestMatchers("/api/produtos-recorrentes/**").authenticated()
+                        .requestMatchers("/api/favoritos/**").authenticated()
 
                         // 4. QUALQUER OUTRO PRECISA DE AUTENTICAÇÃO
                         .anyRequest().authenticated()
