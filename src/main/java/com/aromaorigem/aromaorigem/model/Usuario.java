@@ -71,9 +71,6 @@ public class Usuario implements UserDetails {
 
     private String statusAssinatura;
 
-    @Column(name = "contador_fidelidade")
-    private Integer contadorFidelidade = 0;
-
     @Column(name = "ciente_mudanca_plano")
     private boolean cienteMudancaPlano = false;
 
@@ -84,8 +81,11 @@ public class Usuario implements UserDetails {
     @Column(name = "data_inicio_plano")
     private LocalDate dataInicioPlano;
 
+    @Column(name = "contador_fidelidade")
+    private Integer contadorFidelidade = 0;
+
     @Column(name = "contador_fidelidade_geral")
-    private int contadorFidelidadeGeral = 0;
+    private Integer contadorFidelidadeGeral = 0;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
