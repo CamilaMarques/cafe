@@ -1,5 +1,6 @@
 package com.aromaorigem.aromaorigem.controller;
 
+import com.aromaorigem.aromaorigem.dto.CancelamentoResumoDTO;
 import com.aromaorigem.aromaorigem.model.Assinatura;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.service.AssinaturaService;
@@ -10,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/assinaturas")
@@ -49,11 +51,28 @@ public class AssinaturaController {
     @PatchMapping("/{id}/quantidade")
     public ResponseEntity<Assinatura> atualizarQuantidade(
             @PathVariable Long id,
-            @RequestBody java.util.Map<String, Integer> payload) {
+            @RequestBody Map<String, Integer> payload) {
 
         Integer novaQuantidade = payload.get("quantidade");
         Assinatura assinaturaAtualizada = assinaturaService.atualizarQuantidade(id, novaQuantidade);
         return ResponseEntity.ok(assinaturaAtualizada);
     }
 
+    /**
+     * Endpoint para simular o cancelamento e verificar se há multa proporcional ou isenção (7 dias / 3 meses)
+     */
+    @GetMapping("/{id}/simular-cancelamento")
+    public ResponseEntity<CancelamentoResumoDTO> simularCancelamento(@PathVariable Long id) {
+        CancelamentoResumoDTO resumo = assinaturaService.simularCancelamento(id);
+        return ResponseEntity.ok(resumo);
+    }
+
+    /**
+     * Endpoint para efetivar o cancelamento da assinatura do clube
+     */
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<CancelamentoResumoDTO> cancelarAssinatura(@PathVariable Long id) {
+        CancelamentoResumoDTO resultado = assinaturaService.cancelarAssinatura(id);
+        return ResponseEntity.ok(resultado);
+    }
 }

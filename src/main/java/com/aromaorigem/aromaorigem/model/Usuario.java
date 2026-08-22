@@ -1,4 +1,5 @@
 package com.aromaorigem.aromaorigem.model;
+import com.aromaorigem.aromaorigem.enums.TipoPlano;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -8,7 +9,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -66,18 +69,27 @@ public class Usuario implements UserDetails {
     private String notasSensoriais;
     private String intensidade;
 
-    private String planoAtivo;
     private String statusAssinatura;
-
-    @Column(name = "contador_fidelidade")
-    private Integer contadorFidelidade = 0;
 
     @Column(name = "ciente_mudanca_plano")
     private boolean cienteMudancaPlano = false;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "plano_ativo")
+    private TipoPlano planoAtivo = TipoPlano.NENHUM;
+
+    @Column(name = "data_inicio_plano")
+    private LocalDate dataInicioPlano;
+
+    @Column(name = "contador_fidelidade")
+    private Integer contadorFidelidade = 0;
+
+    @Column(name = "contador_fidelidade_geral")
+    private Integer contadorFidelidadeGeral = 0;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<ProdutoRecorrente> produtosRecorrentes;
+    private List<ProdutoRecorrente> produtosRecorrentes = new ArrayList<>();
 
     @Override
     @JsonIgnore

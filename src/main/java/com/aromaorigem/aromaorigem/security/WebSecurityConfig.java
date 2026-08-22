@@ -70,6 +70,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/usuarios/**").authenticated()
                         .requestMatchers("/api/produtos-recorrentes/**").authenticated()
                         .requestMatchers("/api/favoritos/**").authenticated()
+                        .requestMatchers("/api/fidelidade/**").authenticated()
 
                         // 4. QUALQUER OUTRO PRECISA DE AUTENTICAÇÃO
                         .anyRequest().authenticated()
