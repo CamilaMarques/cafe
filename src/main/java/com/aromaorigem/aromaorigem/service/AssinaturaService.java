@@ -1,6 +1,8 @@
 package com.aromaorigem.aromaorigem.service;
 
 import com.aromaorigem.aromaorigem.dto.CancelamentoResumoDTO;
+import com.aromaorigem.aromaorigem.dto.MesJornadaDTO;
+import com.aromaorigem.aromaorigem.dto.ResumoClubeDTO;
 import com.aromaorigem.aromaorigem.enums.StatusAssinatura;
 import com.aromaorigem.aromaorigem.enums.TipoPlano;
 import com.aromaorigem.aromaorigem.messaging.AssinaturaProducer;
@@ -16,7 +18,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -184,6 +188,78 @@ public class AssinaturaService {
             usuario.setStatusAssinatura("CANCELADA");
             usuarioRepository.save(usuario);
         }
+
+        return resumo;
+    }
+
+    public List<MesJornadaDTO> obterJornadaAssinatura(LocalDate dataInicioPlano, String nomePlano) {
+        if (dataInicioPlano == null) {
+            dataInicioPlano = LocalDate.now();
+        }
+
+        LocalDate hoje = LocalDate.now();
+        List<MesJornadaDTO> jornada = new ArrayList<>();
+
+        String plano = nomePlano != null ? nomePlano.toUpperCase() : "EXPLORADOR";
+
+        for (int i = 1; i <= 12; i++) {
+            LocalDate mesReferencia = dataInicioPlano.plusMonths(i - 1);
+
+            String status = "PENDENTE";
+            if (mesReferencia.isBefore(hoje.withDayOfMonth(1))) {
+                status = "CONCLUIDO";
+            } else if (mesReferencia.getMonth() == hoje.getMonth() && mesReferencia.getYear() == hoje.getYear()) {
+                status = "ATUAL";
+            }
+
+            String titulo = "Mês " + i + ": Curadoria Mensal de Microlotes";
+            String descricao = "Pacote(s) de café especial selecionado(s) com torra artesanal.";
+
+            if (i == 1) {
+                titulo = "1ª Caixa: Estreia no Clube";
+                descricao = "Microlotes selecionados + Torra artesanal gratuita.";
+            } else if (plano.contains("SOMMELIER")) {
+                if (i % 6 == 0) {
+                    titulo = "Caixa Especial: Acessório de Barista 🌟 + Brinde Utilitário 🎁";
+                    descricao = "Inclui acessório exclusivo de barista + Brinde utilitário do ciclo trimestral!";
+                } else if (i % 3 == 0) {
+                    titulo = "Caixa Especial: Brinde Utilitário 🎁";
+                    descricao = "Inclui brinde utilitário exclusivo para o seu ritual.";
+                }
+            } else if (plano.contains("AIBILIVER") || plano.contains("CONECTADO")) {
+                if (i % 3 == 0) {
+                    titulo = "Caixa Especial: Brinde Utilitário 🎁";
+                    descricao = "Inclui brinde utilitário exclusivo a cada 3 meses de assinatura.";
+                }
+            }
+
+            String mesAnoFormatado = mesReferencia.format(DateTimeFormatter.ofPattern("MM/yyyy"));
+            jornada.add(new MesJornadaDTO(i, mesAnoFormatado, status, titulo, descricao));
+        }
+
+        return jornada;
+    }
+
+    public ResumoClubeDTO obterResumoClubeUsuario(Usuario usuario) {
+        LocalDate inicio = usuario.getDataInicioPlano() != null ? usuario.getDataInicioPlano() : LocalDate.now();
+
+        LocalDate cobranca = inicio.plusMonths(1);
+        LocalDate envio = cobranca.plusDays(3);
+        LocalDate fidelidade = inicio.plusMonths(3);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        String planoStr = usuario.getPlanoAtivo() != null ? usuario.getPlanoAtivo().name() : "EXPLORADOR";
+
+        List<MesJornadaDTO> jornada = obterJornadaAssinatura(inicio, planoStr);
+
+        ResumoClubeDTO resumo = new ResumoClubeDTO();
+        resumo.setPlanoAtivo(usuario.getPlanoAtivo() != null ? usuario.getPlanoAtivo().toString() : null);
+        resumo.setDataInicio(inicio.format(formatter));
+        resumo.setProximaCobranca(cobranca.format(formatter));
+        resumo.setProximoEnvio(envio.format(formatter));
+        resumo.setTerminoFidelidade(fidelidade.format(formatter));
+        resumo.setJornada(jornada);
 
         return resumo;
     }
