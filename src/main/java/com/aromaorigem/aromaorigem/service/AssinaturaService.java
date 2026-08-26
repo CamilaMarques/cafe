@@ -118,7 +118,14 @@ public class AssinaturaService {
         LocalDateTime referenciaCriacao = assinatura.getDataCriacao() != null ? assinatura.getDataCriacao() : LocalDateTime.now();
         long diasDesdeCriacao = ChronoUnit.DAYS.between(referenciaCriacao, LocalDateTime.now());
 
-        // 1. Direito de Arrependimento legal (até 7 dias) -> Isenção Total
+        boolean produtoJaEnviado = false;
+        if (assinatura.getDataProximaEntrega() != null) {
+            long diasAteEntrega = ChronoUnit.DAYS.between(LocalDate.now(), assinatura.getDataProximaEntrega());
+            if (diasAteEntrega <= 5 && diasAteEntrega >= 0) {
+                produtoJaEnviado = true;
+            }
+        }
+
         if (diasDesdeCriacao <= 7) {
             return CancelamentoResumoDTO.builder()
                     .isentoMulta(true)
@@ -128,17 +135,16 @@ public class AssinaturaService {
                     .valorMensalidade(BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0))
                     .saldoRestanteContrato(BigDecimal.ZERO)
                     .valorMulta(BigDecimal.ZERO)
+                    .produtoJaEnviado(produtoJaEnviado)
                     .mensagem("Cancelamento gratuito garantido por lei.")
                     .build();
         }
 
-        // 2. Calcula meses cumpridos e restantes do contrato de fidelidade (3 meses)
         long mesesDecorridos = ChronoUnit.MONTHS.between(referenciaCriacao.toLocalDate(), LocalDate.now());
         int mesesCumpridos = (int) Math.max(0, mesesDecorridos);
         int permanenciaMinima = assinatura.getMesesPermanenciaMinima() != null ? assinatura.getMesesPermanenciaMinima() : 3;
         int mesesRestantes = Math.max(0, permanenciaMinima - mesesCumpridos);
 
-        // 3. Se já cumpriu a permanência mínima -> Isenção Total
         if (mesesRestantes == 0) {
             return CancelamentoResumoDTO.builder()
                     .isentoMulta(true)
@@ -148,11 +154,11 @@ public class AssinaturaService {
                     .valorMensalidade(BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0))
                     .saldoRestanteContrato(BigDecimal.ZERO)
                     .valorMulta(BigDecimal.ZERO)
+                    .produtoJaEnviado(produtoJaEnviado)
                     .mensagem("Permanência mínima finalizada. Cancelamento livre de custos.")
                     .build();
         }
 
-        // 4. Multa proporcional com teto de 10% sobre o saldo remanescente
         BigDecimal valorMensal = BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0);
         BigDecimal saldoRestante = valorMensal.multiply(BigDecimal.valueOf(mesesRestantes));
         BigDecimal valorMulta = saldoRestante.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP);
@@ -165,6 +171,7 @@ public class AssinaturaService {
                 .valorMensalidade(valorMensal)
                 .saldoRestanteContrato(saldoRestante)
                 .valorMulta(valorMulta)
+                .produtoJaEnviado(produtoJaEnviado)
                 .mensagem(String.format("Multa proporcional de 10%% aplicável sobre os %d mês(es) restantes: R$ %.2f", mesesRestantes, valorMulta))
                 .build();
     }
@@ -241,7 +248,18 @@ public class AssinaturaService {
     }
 
     public ResumoClubeDTO obterResumoClubeUsuario(Usuario usuario) {
-        LocalDate inicio = usuario.getDataInicioPlano() != null ? usuario.getDataInicioPlano() : LocalDate.now();
+
+        Assinatura assinaturaAtiva = assinaturaRepository.findByUsuarioAndStatus(usuario, StatusAssinatura.ATIVO)
+                .stream().findFirst().orElse(null);
+
+        LocalDate inicio;
+        if (assinaturaAtiva != null && assinaturaAtiva.getDataCriacao() != null) {
+            inicio = assinaturaAtiva.getDataCriacao().toLocalDate();
+        } else if (usuario.getDataInicioPlano() != null) {
+            inicio = usuario.getDataInicioPlano();
+        } else {
+            inicio = LocalDate.now();
+        }
 
         LocalDate cobranca = inicio.plusMonths(1);
         LocalDate envio = cobranca.plusDays(3);
@@ -263,4 +281,5 @@ public class AssinaturaService {
 
         return resumo;
     }
+
 }

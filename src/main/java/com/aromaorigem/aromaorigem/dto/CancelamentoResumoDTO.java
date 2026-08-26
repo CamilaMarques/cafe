@@ -20,4 +20,5 @@ public class CancelamentoResumoDTO {
     private BigDecimal saldoRestanteContrato;
     private BigDecimal valorMulta; // 10% sobre o saldo restante
     private String mensagem;
+    private boolean produtoJaEnviado;
 }
