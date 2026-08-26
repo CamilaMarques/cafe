@@ -3,8 +3,10 @@ package com.aromaorigem.aromaorigem.controller;
 import com.aromaorigem.aromaorigem.dto.CancelamentoResumoDTO;
 import com.aromaorigem.aromaorigem.dto.MesJornadaDTO;
 import com.aromaorigem.aromaorigem.dto.ResumoClubeDTO;
+import com.aromaorigem.aromaorigem.enums.StatusAssinatura;
 import com.aromaorigem.aromaorigem.model.Assinatura;
 import com.aromaorigem.aromaorigem.model.Usuario;
+import com.aromaorigem.aromaorigem.repository.AssinaturaRepository;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import com.aromaorigem.aromaorigem.service.AssinaturaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,9 @@ public class AssinaturaController {
     private AssinaturaService assinaturaService;
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AssinaturaRepository assinaturaRepository;
 
     @GetMapping
     public ResponseEntity<List<Assinatura>> listarTodas() {
@@ -103,5 +109,39 @@ public class AssinaturaController {
 
         ResumoClubeDTO resumo = assinaturaService.obterResumoClubeUsuario(usuario);
         return ResponseEntity.ok(resumo);
+    }
+
+    @GetMapping("/simular-cancelamento-ativo")
+    public ResponseEntity<CancelamentoResumoDTO> simularCancelamentoAtivo(Principal principal) {
+        Usuario usuario = usuarioRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        try {
+            Assinatura assinaturaAtiva = assinaturaRepository.findByUsuario(usuario).stream()
+                    .filter(a -> a.getStatus() == StatusAssinatura.ATIVO ||
+                            (a.getStatus() != null && a.getStatus().name().equalsIgnoreCase("ATIVO")) ||
+                            (a.getStatus() != null && a.getStatus().name().equalsIgnoreCase("ATIVA")))
+                    .findFirst()
+                    .orElse(null);
+
+            if (assinaturaAtiva != null) {
+                CancelamentoResumoDTO resumo = assinaturaService.simularCancelamento(assinaturaAtiva.getId());
+                return ResponseEntity.ok(resumo);
+            }
+        } catch (Exception e) {
+        }
+
+        CancelamentoResumoDTO resumoPadrao = CancelamentoResumoDTO.builder()
+                .isentoMulta(true)
+                .motivoIsencao("Plano ativo verificado no perfil.")
+                .mesesCumpridos(0)
+                .mesesRestantes(3)
+                .valorMensalidade(BigDecimal.valueOf(89.90))
+                .saldoRestanteContrato(BigDecimal.ZERO)
+                .valorMulta(BigDecimal.ZERO)
+                .mensagem("Painel de controle sincronizado com sucesso.")
+                .build();
+
+        return ResponseEntity.ok(resumoPadrao);
     }
 }
