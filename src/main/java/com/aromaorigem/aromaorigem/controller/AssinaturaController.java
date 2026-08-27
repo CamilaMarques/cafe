@@ -144,4 +144,17 @@ public class AssinaturaController {
 
         return ResponseEntity.ok(resumoPadrao);
     }
+
+    @PostMapping("/alterar-plano")
+    public ResponseEntity<Void> alterarPlano(@RequestBody Assinatura novaAssinaturaDto, Principal principal) {
+        Usuario usuario = usuarioRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Assinatura assinatura = new Assinatura();
+        assinatura.setPlano(novaAssinaturaDto.getPlano());
+        assinatura.setValorMensal(novaAssinaturaDto.getValorMensal());
+
+        assinaturaService.salvarAssinatura(assinatura, usuario);
+        return ResponseEntity.ok().build();
+    }
 }

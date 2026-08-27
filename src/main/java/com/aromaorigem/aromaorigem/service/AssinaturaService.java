@@ -56,13 +56,17 @@ public class AssinaturaService {
                 novoPlano = "Aibiliver (Conectado)";
             }
 
-            // Verifica se é uma mudança de plano (upgrade/downgrade) em relação ao plano ativo atual
+            String planoAtualStr = usuarioLogado.getPlanoAtivo() != null ? usuarioLogado.getPlanoAtivo().name() : "";
+
             boolean ehMudancaDePlano = usuarioLogado.getPlanoAtivo() != null &&
                     usuarioLogado.getPlanoAtivo() != TipoPlano.NENHUM &&
-                    !usuarioLogado.getPlanoAtivo().name().equalsIgnoreCase(novoPlano);
+                    !planoAtualStr.equalsIgnoreCase(novoPlano.toUpperCase().replace(" ", "_").replace("(", "").replace(")", ""));
 
-            if (ehMudancaDePlano) {
-                // A alteração de plano reinicia o ciclo de permanência mínima (3 meses) e a fidelidade conforme regra
+            boolean eraSommelier = planoAtualStr.contains("SOMMELIER");
+            boolean vaiParaSommelier = novoPlano.toUpperCase().contains("SOMMELIER");
+            boolean deveReiniciarCiclo = ehMudancaDePlano && (eraSommelier || vaiParaSommelier);
+
+            if (deveReiniciarCiclo) {
                 assinatura.setCicloReiniciadoPorUpgrade(true);
                 assinatura.setDataCriacao(LocalDateTime.now());
                 usuarioLogado.setContadorFidelidade(0);
@@ -120,9 +124,22 @@ public class AssinaturaService {
 
         boolean produtoJaEnviado = false;
         if (assinatura.getDataProximaEntrega() != null) {
-            long diasAteEntrega = ChronoUnit.DAYS.between(LocalDate.now(), assinatura.getDataProximaEntrega());
-            if (diasAteEntrega <= 5 && diasAteEntrega >= 0) {
-                produtoJaEnviado = true;
+            LocalDateTime dataEntregaHora = assinatura.getDataProximaEntrega().atTime(12, 0);
+            long horasAteEntrega = ChronoUnit.HOURS.between(LocalDateTime.now(), dataEntregaHora);
+
+            String planoNome = assinatura.getPlano() != null ? assinatura.getPlano().toUpperCase() : "";
+
+
+            if (planoNome.contains("SOMMELIER")) {
+                if (horasAteEntrega <= 12 && horasAteEntrega >= 0) {
+                    produtoJaEnviado = true;
+                }
+            } else {
+
+                long diasAteEntrega = ChronoUnit.DAYS.between(LocalDate.now(), assinatura.getDataProximaEntrega());
+                if (diasAteEntrega <= 5 && diasAteEntrega >= 0) {
+                    produtoJaEnviado = true;
+                }
             }
         }
 
@@ -249,8 +266,8 @@ public class AssinaturaService {
 
     public ResumoClubeDTO obterResumoClubeUsuario(Usuario usuario) {
 
-        Assinatura assinaturaAtiva = assinaturaRepository.findByUsuarioAndStatus(usuario, StatusAssinatura.ATIVO)
-                .stream().findFirst().orElse(null);
+        Assinatura assinaturaAtiva = assinaturaRepository.findFirstByUsuarioAndStatusOrderByDataCriacaoDesc(usuario, StatusAssinatura.ATIVO)
+                .orElse(null);
 
         LocalDate inicio;
         if (assinaturaAtiva != null && assinaturaAtiva.getDataCriacao() != null) {
