@@ -47,33 +47,45 @@ public class AssinaturaService {
     @Transactional
     public Assinatura salvarAssinatura(Assinatura assinatura, Usuario usuarioLogado) {
         if (usuarioLogado != null && assinatura.getPlano() != null) {
-            String nomeAssinatura = assinatura.getPlano();
+            String nomeAssinatura = assinatura.getPlano().toLowerCase();
 
             String novoPlano = "Explorador";
-            if (nomeAssinatura.toLowerCase().contains("sommelier")) {
+            TipoPlano planoEnum = TipoPlano.EXPLORADOR;
+            BigDecimal novoValorMensal = new BigDecimal("59.00");
+
+            if (nomeAssinatura.contains("sommelier")) {
                 novoPlano = "Sommelier";
-            } else if (nomeAssinatura.toLowerCase().contains("aibiliver") || nomeAssinatura.toLowerCase().contains("conectado")) {
-                novoPlano = "Aibiliver (Conectado)";
+                planoEnum = TipoPlano.SOMMELIER;
+                novoValorMensal = new BigDecimal("189.00");
+            } else if (nomeAssinatura.contains("aibiliver")) {
+                novoPlano = "Aibiliver";
+                planoEnum = TipoPlano.AIBILIVER;
+                novoValorMensal = new BigDecimal("109.00");
             }
 
-            // Verifica se é uma mudança de plano (upgrade/downgrade) em relação ao plano ativo atual
+            assinatura.setValorMensal(novoValorMensal.doubleValue());
+            assinatura.setPlano(novoPlano);
+            assinatura.setUsuario(usuarioLogado);
+
+            String planoAtualStr = usuarioLogado.getPlanoAtivo() != null ? usuarioLogado.getPlanoAtivo().name() : "";
+
             boolean ehMudancaDePlano = usuarioLogado.getPlanoAtivo() != null &&
                     usuarioLogado.getPlanoAtivo() != TipoPlano.NENHUM &&
-                    !usuarioLogado.getPlanoAtivo().name().equalsIgnoreCase(novoPlano);
+                    !planoAtualStr.equalsIgnoreCase(planoEnum.name());
 
-            if (ehMudancaDePlano) {
-                // A alteração de plano reinicia o ciclo de permanência mínima (3 meses) e a fidelidade conforme regra
+            boolean eraSommelier = planoAtualStr.contains("SOMMELIER");
+            boolean vaiParaSommelier = planoEnum == TipoPlano.SOMMELIER;
+            boolean deveReiniciarCiclo = ehMudancaDePlano && (eraSommelier || vaiParaSommelier);
+
+            if (deveReiniciarCiclo) {
                 assinatura.setCicloReiniciadoPorUpgrade(true);
                 assinatura.setDataCriacao(LocalDateTime.now());
                 usuarioLogado.setContadorFidelidade(0);
             }
 
-            TipoPlano planoEnum = TipoPlano.valueOf(novoPlano.toUpperCase().replace(" ", "_").replace("(", "").replace(")", ""));
             usuarioLogado.setPlanoAtivo(planoEnum);
             usuarioLogado.setStatusAssinatura("ATIVA");
             usuarioRepository.save(usuarioLogado);
-
-            assinatura.setUsuario(usuarioLogado);
         }
 
         if (assinatura.getDataCriacao() == null) {
@@ -109,7 +121,9 @@ public class AssinaturaService {
     }
 
     /**
-     * Simula o cancelamento informando se há multa proporcional e o teto de 10%
+     * Simula o cancelamento considerando:
+     * - O valor mensal específico de cada plano/assinatura para o cálculo da multa.
+     * - Validação correta da regra de arrependimento (7 dias) somada ao envio de produto perecível (café).
      */
     public CancelamentoResumoDTO simularCancelamento(Long assinaturaId) {
         Assinatura assinatura = assinaturaRepository.findById(assinaturaId)
@@ -120,48 +134,67 @@ public class AssinaturaService {
 
         boolean produtoJaEnviado = false;
         if (assinatura.getDataProximaEntrega() != null) {
-            long diasAteEntrega = ChronoUnit.DAYS.between(LocalDate.now(), assinatura.getDataProximaEntrega());
-            if (diasAteEntrega <= 5 && diasAteEntrega >= 0) {
-                produtoJaEnviado = true;
+            LocalDateTime dataEntregaHora = assinatura.getDataProximaEntrega().atTime(12, 0);
+            long horasAteEntrega = ChronoUnit.HOURS.between(LocalDateTime.now(), dataEntregaHora);
+
+            String planoNome = assinatura.getPlano() != null ? assinatura.getPlano().toUpperCase() : "";
+
+            if (planoNome.contains("SOMMELIER")) {
+                if (horasAteEntrega <= 12 && horasAteEntrega >= 0) {
+                    produtoJaEnviado = true;
+                }
+            } else {
+                long diasAteEntrega = ChronoUnit.DAYS.between(LocalDate.now(), assinatura.getDataProximaEntrega());
+                if (diasAteEntrega <= 5 && diasAteEntrega >= 0) {
+                    produtoJaEnviado = true;
+                }
             }
         }
 
-        if (diasDesdeCriacao <= 7) {
-            return CancelamentoResumoDTO.builder()
-                    .isentoMulta(true)
-                    .motivoIsencao("Direito de arrependimento (dentro de 7 dias corridos).")
-                    .mesesCumpridos(0)
-                    .mesesRestantes(0)
-                    .valorMensalidade(BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0))
-                    .saldoRestanteContrato(BigDecimal.ZERO)
-                    .valorMulta(BigDecimal.ZERO)
-                    .produtoJaEnviado(produtoJaEnviado)
-                    .mensagem("Cancelamento gratuito garantido por lei.")
-                    .build();
-        }
+        // Pega o valor mensal real e individual da assinatura ativa
+        BigDecimal valorMensal = BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0)
+                .setScale(2, RoundingMode.HALF_UP);
 
         long mesesDecorridos = ChronoUnit.MONTHS.between(referenciaCriacao.toLocalDate(), LocalDate.now());
         int mesesCumpridos = (int) Math.max(0, mesesDecorridos);
         int permanenciaMinima = assinatura.getMesesPermanenciaMinima() != null ? assinatura.getMesesPermanenciaMinima() : 3;
         int mesesRestantes = Math.max(0, permanenciaMinima - mesesCumpridos);
 
+        // Regra de arrependimento de 7 dias (SÓ SE O PRODUTO AINDA NÃO FOI ENVIADO)
+        if (diasDesdeCriacao <= 7 && !produtoJaEnviado) {
+            return CancelamentoResumoDTO.builder()
+                    .isentoMulta(true)
+                    .motivoIsencao("Direito de arrependimento (dentro de 7 dias corridos e produto não enviado).")
+                    .mesesCumpridos(0)
+                    .mesesRestantes(0)
+                    .valorMensalidade(valorMensal)
+                    .saldoRestanteContrato(BigDecimal.ZERO.setScale(2))
+                    .valorMulta(BigDecimal.ZERO.setScale(2))
+                    .produtoJaEnviado(false)
+                    .mensagem("Cancelamento gratuito garantido por lei.")
+                    .build();
+        }
+
+        // Se já cumpriu a permanência mínima de 3 meses
         if (mesesRestantes == 0) {
             return CancelamentoResumoDTO.builder()
                     .isentoMulta(true)
                     .motivoIsencao("Período de permanência mínima de 3 meses cumprido.")
                     .mesesCumpridos(mesesCumpridos)
                     .mesesRestantes(0)
-                    .valorMensalidade(BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0))
-                    .saldoRestanteContrato(BigDecimal.ZERO)
-                    .valorMulta(BigDecimal.ZERO)
+                    .valorMensalidade(valorMensal)
+                    .saldoRestanteContrato(BigDecimal.ZERO.setScale(2))
+                    .valorMulta(BigDecimal.ZERO.setScale(2))
                     .produtoJaEnviado(produtoJaEnviado)
                     .mensagem("Permanência mínima finalizada. Cancelamento livre de custos.")
                     .build();
         }
 
-        BigDecimal valorMensal = BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0);
+        // Cálculo da multa proporcional (10% sobre o saldo restante do contrato baseado no valor do plano)
         BigDecimal saldoRestante = valorMensal.multiply(BigDecimal.valueOf(mesesRestantes));
         BigDecimal valorMulta = saldoRestante.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP);
+
+        String avisoEnvio = produtoJaEnviado ? " (Produto já despachado/enviado)." : "";
 
         return CancelamentoResumoDTO.builder()
                 .isentoMulta(false)
@@ -172,7 +205,7 @@ public class AssinaturaService {
                 .saldoRestanteContrato(saldoRestante)
                 .valorMulta(valorMulta)
                 .produtoJaEnviado(produtoJaEnviado)
-                .mensagem(String.format("Multa proporcional de 10%% aplicável sobre os %d mês(es) restantes: R$ %.2f", mesesRestantes, valorMulta))
+                .mensagem(String.format("Multa proporcional de 10%% aplicável sobre os %d mês(es) restantes: R$ %.2f%s", mesesRestantes, valorMulta, avisoEnvio))
                 .build();
     }
 
@@ -248,9 +281,8 @@ public class AssinaturaService {
     }
 
     public ResumoClubeDTO obterResumoClubeUsuario(Usuario usuario) {
-
-        Assinatura assinaturaAtiva = assinaturaRepository.findByUsuarioAndStatus(usuario, StatusAssinatura.ATIVO)
-                .stream().findFirst().orElse(null);
+        Assinatura assinaturaAtiva = assinaturaRepository.findFirstByUsuarioAndStatusOrderByDataCriacaoDesc(usuario, StatusAssinatura.ATIVO)
+                .orElse(null);
 
         LocalDate inicio;
         if (assinaturaAtiva != null && assinaturaAtiva.getDataCriacao() != null) {
@@ -281,5 +313,4 @@ public class AssinaturaService {
 
         return resumo;
     }
-
 }

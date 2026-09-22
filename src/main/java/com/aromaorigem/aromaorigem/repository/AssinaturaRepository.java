@@ -11,14 +11,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AssinaturaRepository extends JpaRepository <Assinatura, Long> {
+public interface AssinaturaRepository extends JpaRepository<Assinatura, Long> {
 
     List<Assinatura> findByUsuario(Usuario usuario);
 
-    Optional<Assinatura> findByUsuarioAndStatus(Usuario usuario, StatusAssinatura status);
+    Optional<Assinatura> findFirstByUsuarioAndStatusOrderByDataCriacaoDesc(Usuario usuario, StatusAssinatura status);
 
     boolean existsByUsuarioAndStatus(Usuario usuario, StatusAssinatura status);
 }
-
 
 

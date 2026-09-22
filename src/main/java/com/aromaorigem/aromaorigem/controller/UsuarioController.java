@@ -57,6 +57,7 @@ public class UsuarioController {
         usuario.setCep(request.cep());
         usuario.setRua(request.rua());
         usuario.setNumero(request.numero());
+        usuario.setNumero(request.bairro());
         usuario.setCidade(request.cidade());
         usuario.setEstado(request.estado());
         usuario.setComplemento(request.complemento());

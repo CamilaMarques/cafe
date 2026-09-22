@@ -24,6 +24,7 @@ public class UsuarioResponse {
     private String cep;
     private String rua;
     private String numero;
+    private String bairro;
     private String cidade;
     private String estado;
     private String complemento;
@@ -31,6 +32,7 @@ public class UsuarioResponse {
     private String cepAlternativo;
     private String ruaAlternativa;
     private String numeroAlternativo;
+    private String bairroAlternativo;
     private String cidadeAlternativa;
     private String estadoAlternativo;
     private String complementoAlternativo;

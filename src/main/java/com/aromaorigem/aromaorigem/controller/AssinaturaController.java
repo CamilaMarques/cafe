@@ -131,17 +131,42 @@ public class AssinaturaController {
         } catch (Exception e) {
         }
 
+        // Define o valor com base no plano ativo atual do usuário para o fallback
+        double valorBasePlano = 59.00; // Explorador
+        if (usuario.getPlanoAtivo() != null) {
+            String planoEnumStr = usuario.getPlanoAtivo().name();
+            if (planoEnumStr.contains("SOMMELIER")) {
+                valorBasePlano = 189.00;
+            } else if (planoEnumStr.contains("AIBILIVER")) {
+                valorBasePlano = 109.00;
+            }
+        }
+
         CancelamentoResumoDTO resumoPadrao = CancelamentoResumoDTO.builder()
                 .isentoMulta(true)
                 .motivoIsencao("Plano ativo verificado no perfil.")
                 .mesesCumpridos(0)
                 .mesesRestantes(3)
-                .valorMensalidade(BigDecimal.valueOf(89.90))
+                .valorMensalidade(BigDecimal.valueOf(valorBasePlano))
                 .saldoRestanteContrato(BigDecimal.ZERO)
                 .valorMulta(BigDecimal.ZERO)
                 .mensagem("Painel de controle sincronizado com sucesso.")
                 .build();
 
         return ResponseEntity.ok(resumoPadrao);
+    }
+
+    @PostMapping("/alterar-plano")
+    public ResponseEntity<Void> alterarPlano(@RequestBody Assinatura novaAssinaturaDto, Principal principal) {
+        Usuario usuario = usuarioRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Assinatura assinatura = new Assinatura();
+        assinatura.setPlano(novaAssinaturaDto.getPlano());
+        assinatura.setValorMensal(novaAssinaturaDto.getValorMensal());
+        assinatura.setStatus(StatusAssinatura.ATIVO); // Garante que salva como ativo para popular a tabela
+
+        assinaturaService.salvarAssinatura(assinatura, usuario);
+        return ResponseEntity.ok().build();
     }
 }

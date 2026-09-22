@@ -54,12 +54,14 @@ public class Usuario implements UserDetails {
     private String cep;
     private String rua;
     private String numero;
+    private String bairro;
     private String cidade;
     private String estado;
     private String complemento;
 
     private String cepAlternativo;
     private String ruaAlternativa;
+    private String bairroAlternativo;
     private String numeroAlternativo;
     private String cidadeAlternativa;
     private String estadoAlternativo;
