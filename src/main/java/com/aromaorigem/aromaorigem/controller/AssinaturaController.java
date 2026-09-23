@@ -46,17 +46,20 @@ public class AssinaturaController {
     }
 
     @PostMapping
-    public ResponseEntity<Assinatura> criarAssinatura(
-            @RequestBody Assinatura assinatura,
-            @AuthenticationPrincipal Usuario usuarioLogado) {
+    public ResponseEntity<Assinatura> criarAssinatura(@RequestBody Assinatura assinatura, Principal principal) {
+        Usuario usuario = usuarioRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        Assinatura novaAssinatura = assinaturaService.salvarAssinatura(assinatura, usuarioLogado);
+        Assinatura novaAssinatura = assinaturaService.salvarAssinatura(assinatura, usuario);
+        if (novaAssinatura == null) {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(novaAssinatura);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarAssinatura(@PathVariable Long id) {
-        assinaturaService.deletarAssinatura(id);
+    public ResponseEntity<Void> deletarAssinatura(@PathVariable Long id, @AuthenticationPrincipal Usuario usuarioLogado) {
+        assinaturaService.deletarAssinatura(id, usuarioLogado);
         return ResponseEntity.noContent().build();
     }
 
@@ -83,8 +86,10 @@ public class AssinaturaController {
      * Endpoint para efetivar o cancelamento da assinatura do clube
      */
     @PostMapping("/{id}/cancelar")
-    public ResponseEntity<CancelamentoResumoDTO> cancelarAssinatura(@PathVariable Long id) {
-        CancelamentoResumoDTO resultado = assinaturaService.cancelarAssinatura(id);
+    public ResponseEntity<CancelamentoResumoDTO> cancelarAssinatura(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuarioLogado) {
+        CancelamentoResumoDTO resultado = assinaturaService.cancelarAssinatura(id, usuarioLogado);
         return ResponseEntity.ok(resultado);
     }
 
@@ -157,16 +162,25 @@ public class AssinaturaController {
     }
 
     @PostMapping("/alterar-plano")
-    public ResponseEntity<Void> alterarPlano(@RequestBody Assinatura novaAssinaturaDto, Principal principal) {
+    public ResponseEntity<Void> alterarPlano(@RequestBody Map<String, Object> payload, Principal principal) {
         Usuario usuario = usuarioRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        Assinatura assinatura = new Assinatura();
-        assinatura.setPlano(novaAssinaturaDto.getPlano());
-        assinatura.setValorMensal(novaAssinaturaDto.getValorMensal());
-        assinatura.setStatus(StatusAssinatura.ATIVO); // Garante que salva como ativo para popular a tabela
+        String nomePlano = (String) payload.get("plano");
+        if (nomePlano == null) nomePlano = (String) payload.get("nome");
+        if (nomePlano == null) nomePlano = (String) payload.get("tipoPlano");
+        if (nomePlano == null || nomePlano.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
 
-        assinaturaService.salvarAssinatura(assinatura, usuario);
+        Assinatura assinatura = new Assinatura();
+        assinatura.setPlano(nomePlano);
+        assinatura.setStatus(StatusAssinatura.ATIVO);
+
+        Assinatura novaAssinatura = assinaturaService.salvarAssinatura(assinatura, usuario);
+        if (novaAssinatura == null) {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.ok().build();
     }
 }

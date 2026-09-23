@@ -87,6 +87,7 @@ public class AuthController {
         usuario.setCep(cadastroRequest.cep());
         usuario.setRua(cadastroRequest.rua());
         usuario.setNumero(cadastroRequest.numero());
+        usuario.setBairro(cadastroRequest.bairro());
         usuario.setCidade(cadastroRequest.cidade());
         usuario.setEstado(cadastroRequest.estado());
         usuario.setComplemento(cadastroRequest.complemento());
@@ -95,6 +96,7 @@ public class AuthController {
         usuario.setCepAlternativo(cadastroRequest.cepAlternativo());
         usuario.setRuaAlternativa(cadastroRequest.ruaAlternativo());
         usuario.setNumeroAlternativo(cadastroRequest.numeroAlternativo());
+        usuario.setBairroAlternativo(cadastroRequest.bairroAlternativo());
         usuario.setCidadeAlternativa(cadastroRequest.cidadeAlternativo());
         usuario.setEstadoAlternativo(cadastroRequest.estadoAlternativo());
         usuario.setComplementoAlternativo(cadastroRequest.complementoAlternativo());
@@ -144,6 +146,20 @@ public class AuthController {
         admin.setCpf(cadastroRequest.cpf());
         admin.setSenha(encoder.encode(cadastroRequest.senha()));
         admin.setRole("ROLE_ADMIN");
+        admin.setCep(cadastroRequest.cep());
+        admin.setRua(cadastroRequest.rua());
+        admin.setNumero(cadastroRequest.numero());
+        admin.setBairro(cadastroRequest.bairro());
+        admin.setCidade(cadastroRequest.cidade());
+        admin.setEstado(cadastroRequest.estado());
+        admin.setComplemento(cadastroRequest.complemento());
+        admin.setCepAlternativo(cadastroRequest.cepAlternativo());
+        admin.setRuaAlternativa(cadastroRequest.ruaAlternativo());
+        admin.setNumeroAlternativo(cadastroRequest.numeroAlternativo());
+        admin.setBairroAlternativo(cadastroRequest.bairroAlternativo());
+        admin.setCidadeAlternativa(cadastroRequest.cidadeAlternativo());
+        admin.setEstadoAlternativo(cadastroRequest.estadoAlternativo());
+        admin.setComplementoAlternativo(cadastroRequest.complementoAlternativo());
 
         usuarioRepository.save(admin);
 
