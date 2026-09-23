@@ -5,7 +5,6 @@ import com.aromaorigem.aromaorigem.dto.MesJornadaDTO;
 import com.aromaorigem.aromaorigem.dto.ResumoClubeDTO;
 import com.aromaorigem.aromaorigem.enums.StatusAssinatura;
 import com.aromaorigem.aromaorigem.enums.TipoPlano;
-import com.aromaorigem.aromaorigem.messaging.AssinaturaProducer;
 import com.aromaorigem.aromaorigem.model.Assinatura;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.AssinaturaRepository;
@@ -32,9 +31,6 @@ public class AssinaturaService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-
-    @Autowired(required = false)
-    private AssinaturaProducer assinaturaProducer;
 
     public List<Assinatura> listarTodas() {
         return assinaturaRepository.findAll();
@@ -102,10 +98,6 @@ public class AssinaturaService {
         usuarioRepository.save(usuarioLogado);
 
         Assinatura novaAssinatura = assinaturaRepository.save(assinatura);
-
-        if (assinaturaProducer != null) {
-            assinaturaProducer.enviarEventoAssinatura(novaAssinatura);
-        }
 
         return novaAssinatura;
     }
