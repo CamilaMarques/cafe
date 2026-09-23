@@ -52,4 +52,16 @@ public class FidelidadeService {
         usuario.setContadorFidelidade((int) total);
         usuarioRepository.save(usuario);
     }
+
+    @Transactional
+    public void removerEntregaFidelidade(Long pedidoId) {
+        fidelidadeHistoricoRepository.findByPedidoId(pedidoId).ifPresent(historico -> {
+            Usuario usuario = historico.getUsuario();
+            fidelidadeHistoricoRepository.delete(historico);
+
+            long total = fidelidadeHistoricoRepository.countByUsuario(usuario);
+            usuario.setContadorFidelidade((int) total);
+            usuarioRepository.save(usuario);
+        });
+    }
 }

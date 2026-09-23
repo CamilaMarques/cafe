@@ -46,47 +46,34 @@ public class AssinaturaService {
 
     @Transactional
     public Assinatura salvarAssinatura(Assinatura assinatura, Usuario usuarioLogado) {
-        if (usuarioLogado != null && assinatura.getPlano() != null) {
-            String nomeAssinatura = assinatura.getPlano().toLowerCase();
-
-            String novoPlano = "Explorador";
-            TipoPlano planoEnum = TipoPlano.EXPLORADOR;
-            BigDecimal novoValorMensal = new BigDecimal("59.00");
-
-            if (nomeAssinatura.contains("sommelier")) {
-                novoPlano = "Sommelier";
-                planoEnum = TipoPlano.SOMMELIER;
-                novoValorMensal = new BigDecimal("189.00");
-            } else if (nomeAssinatura.contains("aibiliver")) {
-                novoPlano = "Aibiliver";
-                planoEnum = TipoPlano.AIBILIVER;
-                novoValorMensal = new BigDecimal("109.00");
-            }
-
-            assinatura.setValorMensal(novoValorMensal.doubleValue());
-            assinatura.setPlano(novoPlano);
-            assinatura.setUsuario(usuarioLogado);
-
-            String planoAtualStr = usuarioLogado.getPlanoAtivo() != null ? usuarioLogado.getPlanoAtivo().name() : "";
-
-            boolean ehMudancaDePlano = usuarioLogado.getPlanoAtivo() != null &&
-                    usuarioLogado.getPlanoAtivo() != TipoPlano.NENHUM &&
-                    !planoAtualStr.equalsIgnoreCase(planoEnum.name());
-
-            boolean eraSommelier = planoAtualStr.contains("SOMMELIER");
-            boolean vaiParaSommelier = planoEnum == TipoPlano.SOMMELIER;
-            boolean deveReiniciarCiclo = ehMudancaDePlano && (eraSommelier || vaiParaSommelier);
-
-            if (deveReiniciarCiclo) {
-                assinatura.setCicloReiniciadoPorUpgrade(true);
-                assinatura.setDataCriacao(LocalDateTime.now());
-                usuarioLogado.setContadorFidelidade(0);
-            }
-
-            usuarioLogado.setPlanoAtivo(planoEnum);
-            usuarioLogado.setStatusAssinatura("ATIVA");
-            usuarioRepository.save(usuarioLogado);
+        if (usuarioLogado == null) {
+            throw new RuntimeException("Usuário não autenticado para criar assinatura.");
         }
+
+        // Se o usuário não escolheu um plano válido, não faz nada e retorna nulo
+        if (assinatura == null || assinatura.getPlano() == null || assinatura.getPlano().trim().isEmpty() || assinatura.getPlano().equalsIgnoreCase("NENHUM")) {
+            return null;
+        }
+
+        String nomeAssinatura = assinatura.getPlano().toLowerCase();
+        String novoPlano = "Explorador";
+        TipoPlano planoEnum = TipoPlano.EXPLORADOR;
+        BigDecimal novoValorMensal = new BigDecimal("59.00");
+
+        if (nomeAssinatura.contains("sommelier")) {
+            novoPlano = "Sommelier";
+            planoEnum = TipoPlano.SOMMELIER;
+            novoValorMensal = new BigDecimal("189.00");
+        } else if (nomeAssinatura.contains("aibiliver")) {
+            novoPlano = "Aibiliver";
+            planoEnum = TipoPlano.AIBILIVER;
+            novoValorMensal = new BigDecimal("109.00");
+        }
+
+        assinatura.setValorMensal(novoValorMensal.doubleValue());
+        assinatura.setPlano(novoPlano);
+        assinatura.setUsuario(usuarioLogado);
+        assinatura.setStatus(StatusAssinatura.ATIVO);
 
         if (assinatura.getDataCriacao() == null) {
             assinatura.setDataCriacao(LocalDateTime.now());
@@ -98,6 +85,22 @@ public class AssinaturaService {
             assinatura.setMesesPermanenciaMinima(3);
         }
 
+        String planoAtualStr = usuarioLogado.getPlanoAtivo() != null ? usuarioLogado.getPlanoAtivo().name() : "";
+        boolean ehMudancaDePlano = usuarioLogado.getPlanoAtivo() != null &&
+                !planoAtualStr.equalsIgnoreCase(planoEnum.name());
+
+        if (ehMudancaDePlano && (planoAtualStr.contains("SOMMELIER") || planoEnum == TipoPlano.SOMMELIER)) {
+            assinatura.setCicloReiniciadoPorUpgrade(true);
+            usuarioLogado.setContadorFidelidade(0);
+        }
+
+        usuarioLogado.setPlanoAtivo(planoEnum);
+        usuarioLogado.setStatusAssinatura("ATIVA");
+        if (usuarioLogado.getDataInicioPlano() == null) {
+            usuarioLogado.setDataInicioPlano(LocalDate.now());
+        }
+        usuarioRepository.save(usuarioLogado);
+
         Assinatura novaAssinatura = assinaturaRepository.save(assinatura);
 
         if (assinaturaProducer != null) {
@@ -107,8 +110,15 @@ public class AssinaturaService {
         return novaAssinatura;
     }
 
-    public void deletarAssinatura(Long id) {
-        assinaturaRepository.deleteById(id);
+    @Transactional
+    public void deletarAssinatura(Long id, Usuario usuarioLogado) {
+        Assinatura assinatura = assinaturaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assinatura não encontrada"));
+
+        validarProprietario(assinatura, usuarioLogado);
+        assinaturaRepository.delete(assinatura);
+
+        limparPlanoUsuarioSeNecessario(assinatura.getUsuario(), assinatura);
     }
 
     @Transactional
@@ -151,7 +161,6 @@ public class AssinaturaService {
             }
         }
 
-        // Pega o valor mensal real e individual da assinatura ativa
         BigDecimal valorMensal = BigDecimal.valueOf(assinatura.getValorMensal() != null ? assinatura.getValorMensal() : 0.0)
                 .setScale(2, RoundingMode.HALF_UP);
 
@@ -160,7 +169,6 @@ public class AssinaturaService {
         int permanenciaMinima = assinatura.getMesesPermanenciaMinima() != null ? assinatura.getMesesPermanenciaMinima() : 3;
         int mesesRestantes = Math.max(0, permanenciaMinima - mesesCumpridos);
 
-        // Regra de arrependimento de 7 dias (SÓ SE O PRODUTO AINDA NÃO FOI ENVIADO)
         if (diasDesdeCriacao <= 7 && !produtoJaEnviado) {
             return CancelamentoResumoDTO.builder()
                     .isentoMulta(true)
@@ -175,7 +183,6 @@ public class AssinaturaService {
                     .build();
         }
 
-        // Se já cumpriu a permanência mínima de 3 meses
         if (mesesRestantes == 0) {
             return CancelamentoResumoDTO.builder()
                     .isentoMulta(true)
@@ -190,7 +197,6 @@ public class AssinaturaService {
                     .build();
         }
 
-        // Cálculo da multa proporcional (10% sobre o saldo restante do contrato baseado no valor do plano)
         BigDecimal saldoRestante = valorMensal.multiply(BigDecimal.valueOf(mesesRestantes));
         BigDecimal valorMulta = saldoRestante.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP);
 
@@ -209,16 +215,14 @@ public class AssinaturaService {
                 .build();
     }
 
-    /**
-     * Efetiva o cancelamento da assinatura e limpa o status do usuário
-     */
     @Transactional
-    public CancelamentoResumoDTO cancelarAssinatura(Long assinaturaId) {
+    public CancelamentoResumoDTO cancelarAssinatura(Long assinaturaId, Usuario usuarioLogado) {
         CancelamentoResumoDTO resumo = simularCancelamento(assinaturaId);
 
         Assinatura assinatura = assinaturaRepository.findById(assinaturaId)
                 .orElseThrow(() -> new RuntimeException("Assinatura não encontrada."));
 
+        validarProprietario(assinatura, usuarioLogado);
         assinatura.setStatus(StatusAssinatura.CANCELADO);
         assinaturaRepository.save(assinatura);
 
@@ -230,6 +234,33 @@ public class AssinaturaService {
         }
 
         return resumo;
+    }
+
+    private void validarProprietario(Assinatura assinatura, Usuario usuarioLogado) {
+        if (usuarioLogado == null || assinatura.getUsuario() == null ||
+                !assinatura.getUsuario().getId().equals(usuarioLogado.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "Acesso negado");
+        }
+    }
+
+    private void limparPlanoUsuarioSeNecessario(Usuario usuario, Assinatura assinaturaRemovida) {
+        if (usuario == null) {
+            return;
+        }
+
+        boolean mesmoPlano = usuario.getPlanoAtivo() != null &&
+                usuario.getPlanoAtivo().name().equalsIgnoreCase(assinaturaRemovida.getPlano());
+        boolean aindaPossuiAtiva = assinaturaRepository.findByUsuario(usuario).stream()
+                .anyMatch(outra -> outra.getId() != null &&
+                        !outra.getId().equals(assinaturaRemovida.getId()) &&
+                        outra.getStatus() == StatusAssinatura.ATIVO);
+
+        if (mesmoPlano && !aindaPossuiAtiva) {
+            usuario.setPlanoAtivo(null);
+            usuario.setStatusAssinatura("CANCELADA");
+            usuarioRepository.save(usuario);
+        }
     }
 
     public List<MesJornadaDTO> obterJornadaAssinatura(LocalDate dataInicioPlano, String nomePlano) {

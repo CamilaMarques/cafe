@@ -57,7 +57,7 @@ public class UsuarioController {
         usuario.setCep(request.cep());
         usuario.setRua(request.rua());
         usuario.setNumero(request.numero());
-        usuario.setNumero(request.bairro());
+        usuario.setBairro(request.bairro());
         usuario.setCidade(request.cidade());
         usuario.setEstado(request.estado());
         usuario.setComplemento(request.complemento());
@@ -65,6 +65,7 @@ public class UsuarioController {
         usuario.setCepAlternativo(request.cepAlternativo());
         usuario.setRuaAlternativa(request.ruaAlternativo());
         usuario.setNumeroAlternativo(request.numeroAlternativo());
+        usuario.setBairroAlternativo(request.bairroAlternativo());
         usuario.setCidadeAlternativa(request.cidadeAlternativo());
         usuario.setEstadoAlternativo(request.estadoAlternativo());
         usuario.setComplementoAlternativo(request.complementoAlternativo());

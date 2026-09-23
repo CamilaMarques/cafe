@@ -78,7 +78,7 @@ public class Usuario implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "plano_ativo")
-    private TipoPlano planoAtivo = TipoPlano.NENHUM;
+    private TipoPlano planoAtivo;
 
     @Column(name = "data_inicio_plano")
     private LocalDate dataInicioPlano;
