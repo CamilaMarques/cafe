@@ -1,6 +1,7 @@
 package com.aromaorigem.aromaorigem.controller;
 
 import com.aromaorigem.aromaorigem.model.Cafe;
+import com.aromaorigem.aromaorigem.model.VarianteCafe;
 import com.aromaorigem.aromaorigem.repository.AvaliacaoRepository;
 import com.aromaorigem.aromaorigem.repository.CafeRepository;
 import com.aromaorigem.aromaorigem.service.CafeService;
@@ -66,4 +67,22 @@ public class CafeController {
         cafeService.deletarCafe(id);
         return ResponseEntity.noContent().build();
     }
+    @PatchMapping("/variantes/{varianteId}/estoque")
+    public ResponseEntity<?> atualizarEstoqueVariante(@PathVariable Long varianteId, @RequestParam Integer estoque) {
+        VarianteCafe varianteAtualizada = cafeService.atualizarEstoqueVariante(varianteId, estoque);
+        return ResponseEntity.ok(varianteAtualizada);
+    }
+
+    @GetMapping("/admin/promocoes-validade")
+    public ResponseEntity<List<Cafe>> listarPromocoesValidade() {
+        List<Cafe> cafes = cafeService.listarProdutosPertoDoVencimento();
+        return ResponseEntity.ok(cafes);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Cafe> atualizarCafe(@PathVariable Long id, @RequestBody Cafe cafe) {
+        Cafe cafeAtualizado = cafeService.atualizarCafe(id, cafe);
+        return ResponseEntity.ok(cafeAtualizado);
+    }
+
 }

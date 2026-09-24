@@ -77,4 +77,12 @@ public class ProdutoRecorrenteService {
                 cafe != null ? cafe.getRegiao() : null, null
         );
     }
+
+    public ProdutoRecorrente inativar(Long id) {
+        ProdutoRecorrente produto = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        produto.setStatus("INATIVO");
+        return repository.save(produto);
+    }
 }

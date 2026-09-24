@@ -62,11 +62,17 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // 2. ENDPOINTS PÚBLICOS DE CAFÉS E AVALIAÇÕES
+                        // 2. ENDPOINTS PÚBLICOS (APENAS LEITURA PARA CLIENTES)
                         .requestMatchers(HttpMethod.GET, "/api/cafes/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/avaliacoes/**").permitAll()
 
-                        // 3. ENDPOINTS QUE EXIGEM LOGIN
+                        // 3. ENDPOINTS ADMINISTRATIVOS DE CAFÉS (EXIGEM ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/cafes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/cafes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/cafes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/cafes/**").hasRole("ADMIN")
+
+                        // 4. ENDPOINTS QUE EXIGEM LOGIN DE UTILIZADOR
                         .requestMatchers("/api/usuarios/**").authenticated()
                         .requestMatchers("/api/produtos-recorrentes/**").authenticated()
                         .requestMatchers("/api/favoritos/**").authenticated()
@@ -74,7 +80,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/pedidos/**").authenticated()
                         .requestMatchers("/api/progresso/**").authenticated()
 
-                        // 4. QUALQUER OUTRO PRECISA DE AUTENTICAÇÃO
+                        // 5. QUALQUER OUTRO PRECISA DE AUTENTICAÇÃO
                         .anyRequest().authenticated()
                 );
 
