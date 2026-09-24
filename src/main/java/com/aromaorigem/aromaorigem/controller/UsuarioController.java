@@ -3,6 +3,7 @@ package com.aromaorigem.aromaorigem.controller;
 import com.aromaorigem.aromaorigem.dto.AlterarSenhaDTO;
 import com.aromaorigem.aromaorigem.dto.CadastroRequest;
 import com.aromaorigem.aromaorigem.dto.MessageResponse;
+import com.aromaorigem.aromaorigem.dto.UsuarioResponse;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import jakarta.validation.Valid;
@@ -39,7 +40,47 @@ public class UsuarioController {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        return ResponseEntity.ok(usuario);
+        // Mapeia a entidade Usuario para o DTO UsuarioResponse incluindo a role
+        UsuarioResponse response = new UsuarioResponse();
+        response.setId(usuario.getId());
+        response.setNome(usuario.getNome());
+        response.setSobrenome(usuario.getSobrenome());
+        response.setNomeSocial(usuario.getNomeSocial());
+        response.setEmail(usuario.getEmail());
+        response.setRole(usuario.getRole());
+        response.setCpf(usuario.getCpf());
+        response.setCelular(usuario.getCelular());
+        response.setDataNascimento(usuario.getDataNascimento());
+        response.setDataCriacao(usuario.getDataCriacao());
+
+        response.setCep(usuario.getCep());
+        response.setRua(usuario.getRua());
+        response.setNumero(usuario.getNumero());
+        response.setBairro(usuario.getBairro());
+        response.setCidade(usuario.getCidade());
+        response.setEstado(usuario.getEstado());
+        response.setComplemento(usuario.getComplemento());
+
+        response.setCepAlternativo(usuario.getCepAlternativo());
+        response.setRuaAlternativa(usuario.getRuaAlternativa());
+        response.setNumeroAlternativo(usuario.getNumeroAlternativo());
+        response.setBairroAlternativo(usuario.getBairroAlternativo());
+        response.setCidadeAlternativa(usuario.getCidadeAlternativa());
+        response.setEstadoAlternativo(usuario.getEstadoAlternativo());
+        response.setComplementoAlternativo(usuario.getComplementoAlternativo());
+
+        response.setMoagemPreferida(usuario.getMoagemPreferida());
+        response.setNotasSensoriais(usuario.getNotasSensoriais());
+        response.setIntensidade(usuario.getIntensidade());
+
+        response.setStatusAssinatura(usuario.getStatusAssinatura());
+        response.setCienteMudancaPlano(usuario.isCienteMudancaPlano());
+        response.setPlanoAtivo(usuario.getPlanoAtivo());
+        response.setDataInicioPlano(usuario.getDataInicioPlano());
+        response.setContadorFidelidade(usuario.getContadorFidelidade());
+        response.setContadorFidelidadeGeral(usuario.getContadorFidelidadeGeral());
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/perfil/editar")
