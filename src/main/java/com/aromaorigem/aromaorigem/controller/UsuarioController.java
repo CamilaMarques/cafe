@@ -1,15 +1,20 @@
 package com.aromaorigem.aromaorigem.controller;
 
+import com.aromaorigem.aromaorigem.dto.AlterarSenhaDTO;
 import com.aromaorigem.aromaorigem.dto.CadastroRequest;
 import com.aromaorigem.aromaorigem.dto.MessageResponse;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -18,6 +23,8 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/perfil")
     public ResponseEntity<?> obterPerfil() {
@@ -95,5 +102,23 @@ public class UsuarioController {
         usuarioRepository.save(usuario);
 
         return ResponseEntity.ok(new MessageResponse("Confirmação de ciente registrada com sucesso!"));
+    }
+
+    @PutMapping("/alterar-senha")
+    public ResponseEntity<?> alterarSenha(@RequestBody @Valid AlterarSenhaDTO dto, Principal principal) {
+
+        String email = principal.getName();
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilizador não encontrado"));
+
+        if (!passwordEncoder.matches(dto.getSenhaAtual(), usuario.getSenha())) {
+            return ResponseEntity.badRequest().body("A senha atual está incorreta.");
+        }
+
+        usuario.setSenha(passwordEncoder.encode(dto.getNovaSenha()));
+        usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok("Senha alterada com sucesso!");
     }
 }
