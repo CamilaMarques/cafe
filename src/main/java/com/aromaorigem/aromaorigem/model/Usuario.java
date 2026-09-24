@@ -2,6 +2,7 @@ package com.aromaorigem.aromaorigem.model;
 import com.aromaorigem.aromaorigem.enums.TipoPlano;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -58,6 +59,16 @@ public class Usuario implements UserDetails {
     private String cidade;
     private String estado;
     private String complemento;
+
+    @JsonProperty("bairroPrincipal")
+    public String getBairroPrincipal() {
+        return bairro;
+    }
+
+    @JsonProperty("bairroPrincipal")
+    public void setBairroPrincipal(String bairroPrincipal) {
+        this.bairro = bairroPrincipal;
+    }
 
     private String cepAlternativo;
     private String ruaAlternativa;

@@ -1,5 +1,6 @@
 package com.aromaorigem.aromaorigem.controller;
 
+import com.aromaorigem.aromaorigem.dto.AlterarSenhaDTO;
 import com.aromaorigem.aromaorigem.dto.CadastroRequest;
 import com.aromaorigem.aromaorigem.dto.LoginRequest;
 import com.aromaorigem.aromaorigem.dto.MessageResponse;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,7 +34,7 @@ public class AuthController {
     UsuarioRepository usuarioRepository;
 
     @Autowired
-    PasswordEncoder encoder;
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     JwtUtils jwtUtils;
@@ -75,7 +79,7 @@ public class AuthController {
         usuario.setNome(cadastroRequest.nome());
         usuario.setSobrenome(cadastroRequest.sobrenome());
         usuario.setEmail(cadastroRequest.email());
-        usuario.setSenha(encoder.encode(cadastroRequest.senha()));
+        usuario.setSenha(passwordEncoder.encode(cadastroRequest.senha()));
         usuario.setRole("ROLE_USER");
 
         // Dados Pessoais Extras
@@ -144,7 +148,7 @@ public class AuthController {
         admin.setSobrenome(cadastroRequest.sobrenome());
         admin.setEmail(cadastroRequest.email());
         admin.setCpf(cadastroRequest.cpf());
-        admin.setSenha(encoder.encode(cadastroRequest.senha()));
+        admin.setSenha(passwordEncoder.encode(cadastroRequest.senha()));
         admin.setRole("ROLE_ADMIN");
         admin.setCep(cadastroRequest.cep());
         admin.setRua(cadastroRequest.rua());
@@ -198,4 +202,5 @@ public class AuthController {
             return false;
         }
     }
+
 }
