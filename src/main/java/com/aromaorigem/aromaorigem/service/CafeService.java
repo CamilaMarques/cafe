@@ -66,7 +66,7 @@ public class CafeService {
     }
 
     public Cafe atualizarCafe(Long id, Cafe cafeAtualizado) {
-        Cafe cafeExistente = cafeRepository.findByIdWithVariantes(id)
+        Cafe cafeExistente = cafeRepository.findByIdAnyState(id)
                 .orElseThrow(() -> new RuntimeException("Café não encontrado"));
 
         cafeExistente.setNome(cafeAtualizado.getNome());
@@ -81,6 +81,8 @@ public class CafeService {
         cafeExistente.setVideoDemonstracaoUrl(cafeAtualizado.getVideoDemonstracaoUrl());
         cafeExistente.setEmDestaque(cafeAtualizado.isEmDestaque());
 
+        cafeExistente.setAtivo(cafeAtualizado.isAtivo());
+
         if (cafeAtualizado.getVariantes() != null) {
             cafeExistente.getVariantes().clear();
             for (VarianteCafe variante : cafeAtualizado.getVariantes()) {
@@ -90,5 +92,9 @@ public class CafeService {
         }
 
         return cafeRepository.save(cafeExistente);
+    }
+
+    public List<Cafe> listarInativos() {
+        return cafeRepository.findInativosWithVariantes();
     }
 }

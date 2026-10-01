@@ -16,6 +16,9 @@ public interface CafeRepository extends JpaRepository<Cafe, Long> {
     @Query("SELECT DISTINCT c FROM Cafe c LEFT JOIN FETCH c.variantes WHERE c.ativo = true")
     List<Cafe> findAllWithVariantes();
 
+    @Query("SELECT DISTINCT c FROM Cafe c LEFT JOIN FETCH c.variantes WHERE c.ativo = false")
+    List<Cafe> findInativosWithVariantes();
+
     @Query("SELECT DISTINCT c FROM Cafe c LEFT JOIN FETCH c.variantes WHERE c.id = :id AND c.ativo = true")
     Optional<Cafe> findByIdWithVariantes(Long id);
 
@@ -30,4 +33,7 @@ public interface CafeRepository extends JpaRepository<Cafe, Long> {
 
     @Query("SELECT c FROM Cafe c JOIN c.variantes v WHERE v.dataValidade <= :dataLimite AND v.estoque > 0 AND c.ativo = true")
     List<Cafe> findCafesProximosDoVencimento(@Param("dataLimite") LocalDate dataLimite);
+
+    @Query("SELECT DISTINCT c FROM Cafe c LEFT JOIN FETCH c.variantes WHERE c.id = :id")
+    Optional<Cafe> findByIdAnyState(Long id);
 }
