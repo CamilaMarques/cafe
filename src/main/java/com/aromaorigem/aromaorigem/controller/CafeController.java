@@ -85,4 +85,10 @@ public class CafeController {
         return ResponseEntity.ok(cafeAtualizado);
     }
 
+    @GetMapping("/inativos")
+    public ResponseEntity<List<Cafe>> listarInativos() {
+        List<Cafe> cafesInativos = cafeService.listarInativos();
+        return ResponseEntity.ok(cafesInativos);
+    }
+
 }
