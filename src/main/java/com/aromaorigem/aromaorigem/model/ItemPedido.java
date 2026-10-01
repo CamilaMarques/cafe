@@ -33,4 +33,6 @@ public class ItemPedido {
     private Integer intensidade;
     private BigDecimal precoUnitario;
     private Integer quantidade;
+
+    private Long varianteCafeId;
 }

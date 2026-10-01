@@ -2,6 +2,7 @@ package com.aromaorigem.aromaorigem.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "produtos_recorrentes")
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProdutoRecorrente {
 
     @Id
@@ -30,6 +32,7 @@ public class ProdutoRecorrente {
 
     @ManyToOne
     @JoinColumn(name = "cafe_id")
+    @JsonIgnore
     private Cafe cafe;
 
     @ManyToOne
@@ -44,5 +47,6 @@ public class ProdutoRecorrente {
 
     @ManyToOne
     @JoinColumn(name = "variante_id")
+    @JsonIgnore
     private VarianteCafe variante;
 }

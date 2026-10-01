@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
@@ -101,7 +102,6 @@ public class Usuario implements UserDetails {
     private Integer contadorFidelidadeGeral = 0;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private List<ProdutoRecorrente> produtosRecorrentes = new ArrayList<>();
 
     @Override
@@ -119,7 +119,11 @@ public class Usuario implements UserDetails {
     @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        if (this.role == null || this.role.isEmpty()) {
+            return Collections.emptyList();
+        }
+        String formattedRole = this.role.startsWith("ROLE_") ? this.role : "ROLE_" + this.role;
+        return Collections.singletonList(new SimpleGrantedAuthority(formattedRole));
     }
 
     @JsonIgnore

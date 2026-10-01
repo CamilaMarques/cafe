@@ -42,11 +42,8 @@ public class ProdutoRecorrenteController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> cancelarAssinaturaProduto(@PathVariable Long id) {
-        if (produtoRecorrenteRepository.existsById(id)) {
-            produtoRecorrenteRepository.deleteById(id);
-            return ResponseEntity.ok("Assinatura cancelada com sucesso!");
-        }
-        return ResponseEntity.notFound().build();
+        ProdutoRecorrente produto = produtoRecorrenteService.inativar(id);
+        return ResponseEntity.ok(produto);
     }
 
     @PatchMapping("/{id}/quantidade")

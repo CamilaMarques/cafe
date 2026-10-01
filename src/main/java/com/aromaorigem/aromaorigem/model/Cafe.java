@@ -44,7 +44,6 @@ public class Cafe {
     @Column(name = "notas_sensoriais", columnDefinition = "text[]")
     private List<String> notasSensoriais;
 
-    // Mapeado como array nativo no Postgres
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "imagens_url", columnDefinition = "text[]")
     private List<String> imagensUrl;
@@ -56,11 +55,11 @@ public class Cafe {
     private Double mediaNotas = 0.0;
     private Integer totalAvaliacoes = 0;
 
-    @JsonManagedReference
     @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VarianteCafe> variantes;
 
-    @JsonManagedReference
     @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Avaliacao> avaliacoes;
+
+    private boolean ativo = true;
 }

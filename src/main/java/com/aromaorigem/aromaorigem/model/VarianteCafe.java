@@ -1,12 +1,13 @@
 package com.aromaorigem.aromaorigem.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "variantes_cafe")
@@ -20,7 +21,7 @@ public class VarianteCafe {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cafe_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnore
     private Cafe cafe;
 
     @Column(nullable = false)
@@ -31,4 +32,6 @@ public class VarianteCafe {
 
     @Column(nullable = false)
     private Integer estoque = 0;
+
+    private LocalDate dataValidade;
 }
