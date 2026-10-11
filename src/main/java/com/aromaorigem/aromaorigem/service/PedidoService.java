@@ -4,12 +4,14 @@ import com.aromaorigem.aromaorigem.dto.ItemPedidoDTO;
 import com.aromaorigem.aromaorigem.dto.PedidoRequestDTO;
 import com.aromaorigem.aromaorigem.enums.StatusPedido;
 import com.aromaorigem.aromaorigem.model.*;
+import com.aromaorigem.aromaorigem.repository.HistoricoStatusPedidoRepository;
 import com.aromaorigem.aromaorigem.repository.PedidoRepository;
 import com.aromaorigem.aromaorigem.repository.VarianteCafeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,9 @@ public class PedidoService {
 
     @Autowired
     private VarianteCafeRepository varianteCafeRepository;
+
+    @Autowired
+    private HistoricoStatusPedidoRepository historicoStatusPedidoRepository;
 
     @Autowired
     private AssinaturaService assinaturaService;
@@ -92,12 +97,79 @@ public class PedidoService {
 
         Pedido novoPedido = pedidoRepository.save(pedido);
 
+        HistoricoStatusPedido historico = HistoricoStatusPedido.builder()
+                .pedido(novoPedido)
+                .status(novoPedido.getStatus())
+                .responsavel(usuario.getEmail())
+                .dataAlteracao(LocalDateTime.now())
+                .build();
+        historicoStatusPedidoRepository.save(historico);
+
         try {
             fidelidadeService.registrarEntregaFidelidade(usuario, novoPedido.getId(), "COMPRA_AVULSA");
         } catch (Exception e) {
-
         }
 
         return novoPedido;
+    }
+
+    @Transactional
+    public Pedido atualizarStatusAdmin(Long pedidoId, StatusPedido novoStatus, String adminEmail) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        pedido.setStatus(novoStatus);
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        HistoricoStatusPedido historico = HistoricoStatusPedido.builder()
+                .pedido(pedidoSalvo)
+                .status(novoStatus)
+                .responsavel(adminEmail != null ? adminEmail : "Admin")
+                .dataAlteracao(LocalDateTime.now())
+                .build();
+        historicoStatusPedidoRepository.save(historico);
+
+        return pedidoSalvo;
+    }
+
+    @Transactional
+    public Pedido processarDevolucao(Long pedidoId, boolean aceita, String justificativa, String adminEmail) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        StatusPedido statusFinal;
+        if (aceita) {
+            statusFinal = StatusPedido.CANCELADO;
+            pedido.setMotivoRecusaDevolucao(null);
+
+            if (pedido.getItens() != null) {
+                for (ItemPedido item : pedido.getItens()) {
+                    if (item.getVarianteCafeId() != null) {
+                        VarianteCafe variante = varianteCafeRepository.findById(item.getVarianteCafeId())
+                                .orElse(null);
+                        if (variante != null) {
+                            variante.setEstoque(variante.getEstoque() + item.getQuantidade());
+                            varianteCafeRepository.save(variante);
+                        }
+                    }
+                }
+            }
+        } else {
+            statusFinal = StatusPedido.ENTREGUE;
+            pedido.setMotivoRecusaDevolucao(justificativa);
+        }
+
+        pedido.setStatus(statusFinal);
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        HistoricoStatusPedido historico = HistoricoStatusPedido.builder()
+                .pedido(pedidoSalvo)
+                .status(statusFinal)
+                .responsavel(adminEmail != null ? adminEmail : "Admin")
+                .dataAlteracao(LocalDateTime.now())
+                .build();
+        historicoStatusPedidoRepository.save(historico);
+
+        return pedidoSalvo;
     }
 }

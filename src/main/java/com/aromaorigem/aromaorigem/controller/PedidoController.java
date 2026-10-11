@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -86,19 +87,58 @@ public class PedidoController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<List<Pedido>> listarTodosPedidosAdmin(Principal principal) {
-        List<Pedido> pedidos = pedidoRepository.findAllByOrderByDataCriacaoDesc();
-        return ResponseEntity.ok(pedidos);
+    public ResponseEntity<List<Pedido>> listarPedidosAdmin(
+            @RequestParam(required = false) String data,
+            @RequestParam(required = false) String mes,
+            @RequestParam(required = false) Long id,
+            Principal principal) {
+
+        if (id != null) {
+            return pedidoRepository.findById(id)
+                    .map(p -> ResponseEntity.ok(List.of(p)))
+                    .orElse(ResponseEntity.ok(List.of()));
+        }
+
+        if (data != null && !data.isBlank()) {
+            java.time.LocalDate localDate = java.time.LocalDate.parse(data);
+            LocalDateTime inicio = localDate.atStartOfDay();
+            LocalDateTime fim = localDate.atTime(23, 59, 59);
+            return ResponseEntity.ok(pedidoRepository.findByDataCriacaoBetween(inicio, fim));
+        }
+
+        if (mes != null && !mes.isBlank()) {
+            java.time.YearMonth yearMonth = java.time.YearMonth.parse(mes);
+            LocalDateTime inicio = yearMonth.atDay(1).atStartOfDay();
+            LocalDateTime fim = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+            return ResponseEntity.ok(pedidoRepository.findByDataCriacaoBetween(inicio, fim));
+        }
+
+        return ResponseEntity.ok(pedidoRepository.findAllByOrderByDataCriacaoDesc());
+    }
+
+    @PatchMapping("/admin/{id}/devolucao")
+    public ResponseEntity<?> tratarDevolucao(
+            @PathVariable Long id,
+            @RequestParam boolean aceita,
+            @RequestParam(required = false) String justificativa,
+            Principal principal) {
+        try {
+            String emailAdmin = principal != null ? principal.getName() : "Admin";
+            Pedido pedidoAtualizado = pedidoService.processarDevolucao(id, aceita, justificativa, emailAdmin);
+            return ResponseEntity.ok(pedidoAtualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PatchMapping("/admin/{id}/status")
     public ResponseEntity<?> atualizarStatusPedido(@PathVariable Long id, @RequestParam StatusPedido novoStatus, Principal principal) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
-
-        pedido.setStatus(novoStatus);
-        pedidoRepository.save(pedido);
-
-        return ResponseEntity.ok(pedido);
+        try {
+            String emailAdmin = principal != null ? principal.getName() : "Admin";
+            Pedido pedido = pedidoService.atualizarStatusAdmin(id, novoStatus, emailAdmin);
+            return ResponseEntity.ok(pedido);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }
