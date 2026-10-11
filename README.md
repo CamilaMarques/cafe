@@ -34,7 +34,7 @@ O projeto segue os princípios de separação de responsabilidades em camadas:
 
 ### 1. Clonar o Repositório
 
-- git clone [https://github.com/SEU_USUARIO/cafe.git](https://github.com/SEU_USUARIO/cafe.git)
+- git clone [https://github.com/camilamarques/cafe.git](https://github.com/SEU_USUARIO/cafe.git)
 - cd cafe
 
 ---
