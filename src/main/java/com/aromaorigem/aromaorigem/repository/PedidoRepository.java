@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByUsuarioOrderByDataCriacaoDesc(Usuario usuario);
+    List<Pedido> findAllByOrderByDataCriacaoDesc();
 }

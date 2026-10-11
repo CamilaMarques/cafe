@@ -10,6 +10,7 @@ import com.aromaorigem.aromaorigem.repository.PedidoRepository;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import com.aromaorigem.aromaorigem.service.AssinaturaService;
 import com.aromaorigem.aromaorigem.service.FidelidadeService;
+import com.aromaorigem.aromaorigem.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,66 +31,22 @@ public class PedidoController {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private FidelidadeService fidelidadeService;
+    private PedidoService pedidoService;
 
     @Autowired
-    private AssinaturaService assinaturaService;
+    private FidelidadeService fidelidadeService;
 
     @PostMapping
-    public ResponseEntity<Pedido> criarPedido(@RequestBody PedidoRequestDTO dto, Principal principal) {
+    public ResponseEntity<?> criarPedido(@RequestBody PedidoRequestDTO dto, Principal principal) {
         Usuario usuario = usuarioRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        if ("ASSINATURA".equalsIgnoreCase(dto.getTipo())) {
-            if (dto.getPlano() == null || dto.getPlano().trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            Assinatura assinatura = new Assinatura();
-            assinatura.setPlano(dto.getPlano());
-            assinatura.setQuantidade(dto.getQuantidade() != null ? dto.getQuantidade() : 1);
-            assinaturaService.salvarAssinatura(assinatura, usuario);
-        }
-
-        // 1. Cria o pedido base
-        Pedido pedido = Pedido.builder()
-                .usuario(usuario)
-                .valorTotal(dto.getValorTotal())
-                .valorFrete(dto.getValorFrete())
-                .formaPagamento(dto.getFormaPagamento())
-                .enderecoEntrega(dto.getEnderecoEntrega())
-                .prazoEntrega(dto.getPrazoEntrega())
-                .turnoEntrega(dto.getTurnoEntrega())
-                .status(StatusPedido.PROCESSANDO)
-                .build();
-
-        if (dto.getItens() != null && !dto.getItens().isEmpty()) {
-            List<ItemPedido> itensEntidade = dto.getItens().stream().map(itemDto ->
-                    ItemPedido.builder()
-                            .pedido(pedido)
-                            .nome(itemDto.getNome())
-                            .peso(itemDto.getPeso())
-                            .fazendaProdutora(itemDto.getFazendaProdutora())
-                            .regiao(itemDto.getRegiao())
-                            .altitude(itemDto.getAltitude())
-                            .intensidade(itemDto.getIntensidade())
-                            .precoUnitario(itemDto.getPrecoUnitario())
-                            .quantidade(itemDto.getQuantidade())
-                            .build()
-            ).toList();
-
-            pedido.setItens(itensEntidade);
-        }
-
-        Pedido novoPedido = pedidoRepository.save(pedido);
-
         try {
-            fidelidadeService.registrarEntregaFidelidade(usuario, novoPedido.getId(), "COMPRA_AVULSA");
-        } catch (Exception e) {
-
+            Pedido novoPedido = pedidoService.criarPedido(dto, usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(novoPedido);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoPedido);
     }
 
     @GetMapping
@@ -120,12 +77,27 @@ public class PedidoController {
         pedido.setStatus(StatusPedido.CANCELADO);
         pedidoRepository.save(pedido);
 
-        // Remove ou estorna a contagem da fidelidade ao cancelar o pedido
         try {
             fidelidadeService.removerEntregaFidelidade(pedido.getId());
         } catch (Exception e) {
-            // Caso o método tenha outro nome no seu service, ajuste conforme a sua implementação
         }
+
+        return ResponseEntity.ok(pedido);
+    }
+
+    @GetMapping("/admin/todos")
+    public ResponseEntity<List<Pedido>> listarTodosPedidosAdmin(Principal principal) {
+        List<Pedido> pedidos = pedidoRepository.findAllByOrderByDataCriacaoDesc();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @PatchMapping("/admin/{id}/status")
+    public ResponseEntity<?> atualizarStatusPedido(@PathVariable Long id, @RequestParam StatusPedido novoStatus, Principal principal) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        pedido.setStatus(novoStatus);
+        pedidoRepository.save(pedido);
 
         return ResponseEntity.ok(pedido);
     }
