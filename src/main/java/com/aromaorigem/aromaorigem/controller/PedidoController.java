@@ -85,7 +85,7 @@ public class PedidoController {
         return ResponseEntity.ok(pedido);
     }
 
-    @GetMapping("/admin/todos")
+    @GetMapping("/admin")
     public ResponseEntity<List<Pedido>> listarTodosPedidosAdmin(Principal principal) {
         List<Pedido> pedidos = pedidoRepository.findAllByOrderByDataCriacaoDesc();
         return ResponseEntity.ok(pedidos);
