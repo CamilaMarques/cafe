@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 @Data
 public class ItemPedidoDTO {
+    private Long varianteCafeId;
     private String nome;
     private String peso;
     private String fazendaProdutora;
