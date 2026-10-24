@@ -26,9 +26,8 @@ public class Assinatura {
     @Enumerated(EnumType.STRING)
     private StatusAssinatura status = StatusAssinatura.ATIVO;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id")
-    @JsonIgnore
     private Usuario usuario;
 
     private LocalDateTime dataCriacao = LocalDateTime.now();
@@ -37,5 +36,8 @@ public class Assinatura {
     private Integer mesesPermanenciaMinima = 3;
     private Boolean cicloReiniciadoPorUpgrade = false;
     private Integer contadorFidelidadeClube = 0;
+
+    @Transient
+    private Double valorMultaProporcional;
 
 }

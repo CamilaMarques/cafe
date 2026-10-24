@@ -184,13 +184,13 @@ public class AssinaturaController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/admin")
+    @GetMapping("/admin-assinaturas")
     public ResponseEntity<List<Assinatura>> listarAssinaturasAdmin(Principal principal) {
         List<Assinatura> assinaturas = assinaturaService.listarTodas();
         return ResponseEntity.ok(assinaturas);
     }
 
-    @PatchMapping("/admin/{id}/cancelar")
+    @PatchMapping("/admin-assinaturas/{id}/cancelar")
     public ResponseEntity<?> cancelarAssinaturaAdmin(@PathVariable Long id, Principal principal) {
         Assinatura assinatura = assinaturaService.buscarPorId(id)
                 .orElseThrow(() -> new RuntimeException("Assinatura não encontrada"));

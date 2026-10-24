@@ -33,7 +33,22 @@ public class AssinaturaService {
     private UsuarioRepository usuarioRepository;
 
     public List<Assinatura> listarTodas() {
-        return assinaturaRepository.findAll();
+        List<Assinatura> assinaturas = assinaturaRepository.findAllComUsuario();
+
+        for (Assinatura ass : assinaturas) {
+            try {
+                CancelamentoResumoDTO resumo = simularCancelamento(ass.getId());
+                if (resumo != null && resumo.getValorMulta() != null) {
+                    ass.setValorMultaProporcional(resumo.getValorMulta().doubleValue());
+                } else {
+                    ass.setValorMultaProporcional(0.0);
+                }
+            } catch (Exception e) {
+                ass.setValorMultaProporcional(0.0);
+            }
+        }
+
+        return assinaturas;
     }
 
     public Optional<Assinatura> buscarPorId(Long id) {
@@ -336,4 +351,5 @@ public class AssinaturaService {
 
         return resumo;
     }
+
 }
