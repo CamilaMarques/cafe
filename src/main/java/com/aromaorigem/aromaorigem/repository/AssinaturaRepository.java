@@ -5,6 +5,7 @@ import com.aromaorigem.aromaorigem.model.Assinatura;
 import com.aromaorigem.aromaorigem.model.Cafe;
 import com.aromaorigem.aromaorigem.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,6 +19,9 @@ public interface AssinaturaRepository extends JpaRepository<Assinatura, Long> {
     Optional<Assinatura> findFirstByUsuarioAndStatusOrderByDataCriacaoDesc(Usuario usuario, StatusAssinatura status);
 
     boolean existsByUsuarioAndStatus(Usuario usuario, StatusAssinatura status);
+
+    @Query("SELECT a FROM Assinatura a LEFT JOIN FETCH a.usuario")
+    List<Assinatura> findAllComUsuario();
 }
 
 
