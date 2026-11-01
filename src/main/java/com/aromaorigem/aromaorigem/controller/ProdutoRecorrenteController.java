@@ -1,8 +1,10 @@
 package com.aromaorigem.aromaorigem.controller;
 
 import com.aromaorigem.aromaorigem.dto.ProdutoRecorrenteDTO;
+import com.aromaorigem.aromaorigem.model.Pedido;
 import com.aromaorigem.aromaorigem.model.ProdutoRecorrente;
 import com.aromaorigem.aromaorigem.model.Usuario;
+import com.aromaorigem.aromaorigem.repository.PedidoRepository;
 import com.aromaorigem.aromaorigem.repository.ProdutoRecorrenteRepository;
 import com.aromaorigem.aromaorigem.repository.UsuarioRepository;
 import com.aromaorigem.aromaorigem.service.ProdutoRecorrenteService;
@@ -24,6 +26,9 @@ public class ProdutoRecorrenteController {
 
     @Autowired
     private ProdutoRecorrenteService produtoRecorrenteService;
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
 
     @GetMapping
     public ResponseEntity<?> listarProdutosDoUsuarioLogado(@AuthenticationPrincipal Usuario usuarioLogado) {
@@ -57,5 +62,14 @@ public class ProdutoRecorrenteController {
         Integer novaQuantidade = payload.get("quantidade");
         ProdutoRecorrenteDTO atualizado = produtoRecorrenteService.atualizarQuantidade(id, novaQuantidade);
         return ResponseEntity.ok(atualizado);
+    }
+
+    @GetMapping("/admin/recorrentes")
+    public ResponseEntity<List<Pedido>> listarPedidosRecorrentesAdmin() {
+        List<Pedido> todos = pedidoRepository.findAllByOrderByDataCriacaoDesc();
+        List<Pedido> recorrentes = todos.stream()
+                .filter(p -> p.getFormaPagamento() != null && p.getFormaPagamento().contains("Recorrente"))
+                .toList();
+        return ResponseEntity.ok(recorrentes);
     }
 }

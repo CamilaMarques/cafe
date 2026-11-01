@@ -61,9 +61,18 @@ public class AssinaturaService {
             throw new RuntimeException("Usuário não autenticado para criar assinatura.");
         }
 
-        // Se o usuário não escolheu um plano válido, não faz nada e retorna nulo
         if (assinatura == null || assinatura.getPlano() == null || assinatura.getPlano().trim().isEmpty() || assinatura.getPlano().equalsIgnoreCase("NENHUM")) {
             return null;
+        }
+
+        List<Assinatura> assinaturasAntigas = assinaturaRepository.findByUsuario(usuarioLogado);
+        for (Assinatura antiga : assinaturasAntigas) {
+            if (antiga.getStatus() == StatusAssinatura.ATIVO ||
+                    (antiga.getStatus() != null && antiga.getStatus().name().equalsIgnoreCase("ATIVO")) ||
+                    (antiga.getStatus() != null && antiga.getStatus().name().equalsIgnoreCase("ATIVA"))) {
+                antiga.setStatus(StatusAssinatura.CANCELADO);
+                assinaturaRepository.save(antiga);
+            }
         }
 
         String nomeAssinatura = assinatura.getPlano().toLowerCase();
